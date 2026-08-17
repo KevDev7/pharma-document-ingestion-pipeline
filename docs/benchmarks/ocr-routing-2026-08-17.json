@@ -1,0 +1,1021 @@
+{
+  "measured_at": "2026-08-17T21:50:39.504566+00:00",
+  "environment": {
+    "platform": "macOS-26.5.2-arm64-arm-64bit",
+    "python": "3.9.6",
+    "pymupdf": "1.26.5",
+    "tesseract": "5.5.2"
+  },
+  "manifest": "ocr-stress-manifest.json",
+  "source_pages": 6,
+  "generated_cases": 38,
+  "routing": {
+    "character_threshold": {
+      "true_positive": 12,
+      "false_positive": 0,
+      "false_negative": 19,
+      "true_negative": 7,
+      "precision": 1.0,
+      "recall": 0.3871,
+      "f1": 0.5581
+    },
+    "quality_aware": {
+      "true_positive": 31,
+      "false_positive": 0,
+      "false_negative": 0,
+      "true_negative": 7,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
+  },
+  "core_corpus_routing_audit": {
+    "pages": 430,
+    "character_threshold_routes": 1,
+    "quality_router_routes": 1,
+    "additional_quality_routes": 0,
+    "additional_route_examples": []
+  },
+  "production_extractor": {
+    "cases": 38,
+    "correct_method_cases": 38,
+    "method_accuracy": 1.0,
+    "ocr_scenarios": 24,
+    "rejected_conflict_scenarios": 1,
+    "ocr_scenario_phrase_accuracy": 1.0
+  },
+  "ocr_configurations": {
+    "psm3_auto": {
+      "pages": 12,
+      "mean_word_error_rate": 0.0227,
+      "mean_character_similarity": 0.9816,
+      "key_phrase_accuracy": 1.0,
+      "seconds_per_page": {
+        "p50": 0.9696,
+        "p95": 1.3233
+      }
+    },
+    "psm6_block": {
+      "pages": 12,
+      "mean_word_error_rate": 0.021,
+      "mean_character_similarity": 0.9915,
+      "key_phrase_accuracy": 1.0,
+      "seconds_per_page": {
+        "p50": 0.9231,
+        "p95": 1.273
+      }
+    }
+  },
+  "routing_cases": [
+    {
+      "case_id": "fda-guidance-process-validation-p0014-digital_control",
+      "variant": "digital_control",
+      "expected_ocr": false,
+      "embedded_characters": 3017,
+      "full_page_image": false,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": false
+    },
+    {
+      "case_id": "fda-guidance-process-validation-p0014-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 0,
+      "full_page_image": true,
+      "character_threshold_prediction": true,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-process-validation-p0014-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "expected_ocr": true,
+      "embedded_characters": 0,
+      "full_page_image": true,
+      "character_threshold_prediction": true,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-process-validation-p0014-corrupt_text_layer_200dpi",
+      "variant": "corrupt_text_layer_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 239,
+      "full_page_image": true,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-process-validation-p0014-corrupt_plausible_layer_200dpi",
+      "variant": "corrupt_plausible_layer_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 107,
+      "full_page_image": true,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-process-validation-p0014-correct_text_layer_200dpi",
+      "variant": "correct_text_layer_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 3017,
+      "full_page_image": true,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-aseptic-processing-p0038-digital_control",
+      "variant": "digital_control",
+      "expected_ocr": false,
+      "embedded_characters": 2967,
+      "full_page_image": false,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": false
+    },
+    {
+      "case_id": "fda-guidance-aseptic-processing-p0038-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 0,
+      "full_page_image": true,
+      "character_threshold_prediction": true,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-aseptic-processing-p0038-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "expected_ocr": true,
+      "embedded_characters": 0,
+      "full_page_image": true,
+      "character_threshold_prediction": true,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-aseptic-processing-p0038-corrupt_text_layer_200dpi",
+      "variant": "corrupt_text_layer_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 239,
+      "full_page_image": true,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-aseptic-processing-p0038-corrupt_plausible_layer_200dpi",
+      "variant": "corrupt_plausible_layer_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 107,
+      "full_page_image": true,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-aseptic-processing-p0038-correct_text_layer_200dpi",
+      "variant": "correct_text_layer_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 2967,
+      "full_page_image": true,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-data-integrity-cgmp-p0008-digital_control",
+      "variant": "digital_control",
+      "expected_ocr": false,
+      "embedded_characters": 2964,
+      "full_page_image": false,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": false
+    },
+    {
+      "case_id": "fda-guidance-data-integrity-cgmp-p0008-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 0,
+      "full_page_image": true,
+      "character_threshold_prediction": true,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-data-integrity-cgmp-p0008-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "expected_ocr": true,
+      "embedded_characters": 0,
+      "full_page_image": true,
+      "character_threshold_prediction": true,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-data-integrity-cgmp-p0008-corrupt_text_layer_200dpi",
+      "variant": "corrupt_text_layer_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 239,
+      "full_page_image": true,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-data-integrity-cgmp-p0008-corrupt_plausible_layer_200dpi",
+      "variant": "corrupt_plausible_layer_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 107,
+      "full_page_image": true,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-data-integrity-cgmp-p0008-correct_text_layer_200dpi",
+      "variant": "correct_text_layer_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 2964,
+      "full_page_image": true,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-oos-test-results-p0009-digital_control",
+      "variant": "digital_control",
+      "expected_ocr": false,
+      "embedded_characters": 2607,
+      "full_page_image": false,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": false
+    },
+    {
+      "case_id": "fda-guidance-oos-test-results-p0009-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 0,
+      "full_page_image": true,
+      "character_threshold_prediction": true,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-oos-test-results-p0009-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "expected_ocr": true,
+      "embedded_characters": 0,
+      "full_page_image": true,
+      "character_threshold_prediction": true,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-oos-test-results-p0009-corrupt_text_layer_200dpi",
+      "variant": "corrupt_text_layer_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 239,
+      "full_page_image": true,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-oos-test-results-p0009-corrupt_plausible_layer_200dpi",
+      "variant": "corrupt_plausible_layer_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 107,
+      "full_page_image": true,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-oos-test-results-p0009-correct_text_layer_200dpi",
+      "variant": "correct_text_layer_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 2607,
+      "full_page_image": true,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-tablet-size-shape-p0006-digital_control",
+      "variant": "digital_control",
+      "expected_ocr": false,
+      "embedded_characters": 3582,
+      "full_page_image": false,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": false
+    },
+    {
+      "case_id": "fda-guidance-tablet-size-shape-p0006-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 0,
+      "full_page_image": true,
+      "character_threshold_prediction": true,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-tablet-size-shape-p0006-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "expected_ocr": true,
+      "embedded_characters": 0,
+      "full_page_image": true,
+      "character_threshold_prediction": true,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-tablet-size-shape-p0006-corrupt_text_layer_200dpi",
+      "variant": "corrupt_text_layer_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 239,
+      "full_page_image": true,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-tablet-size-shape-p0006-corrupt_plausible_layer_200dpi",
+      "variant": "corrupt_plausible_layer_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 107,
+      "full_page_image": true,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-tablet-size-shape-p0006-correct_text_layer_200dpi",
+      "variant": "correct_text_layer_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 3582,
+      "full_page_image": true,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-high-risk-components-p0007-digital_control",
+      "variant": "digital_control",
+      "expected_ocr": false,
+      "embedded_characters": 4367,
+      "full_page_image": false,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": false
+    },
+    {
+      "case_id": "fda-guidance-high-risk-components-p0007-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 0,
+      "full_page_image": true,
+      "character_threshold_prediction": true,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-high-risk-components-p0007-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "expected_ocr": true,
+      "embedded_characters": 0,
+      "full_page_image": true,
+      "character_threshold_prediction": true,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-high-risk-components-p0007-corrupt_text_layer_200dpi",
+      "variant": "corrupt_text_layer_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 239,
+      "full_page_image": true,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-high-risk-components-p0007-corrupt_plausible_layer_200dpi",
+      "variant": "corrupt_plausible_layer_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 107,
+      "full_page_image": true,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "fda-guidance-high-risk-components-p0007-correct_text_layer_200dpi",
+      "variant": "correct_text_layer_200dpi",
+      "expected_ocr": true,
+      "embedded_characters": 4367,
+      "full_page_image": true,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": true
+    },
+    {
+      "case_id": "synthetic-repetitive_digital_certificate",
+      "variant": "repetitive_digital_certificate",
+      "expected_ocr": false,
+      "embedded_characters": 129,
+      "full_page_image": false,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": false
+    },
+    {
+      "case_id": "synthetic-matched_length_critical_field_conflict",
+      "variant": "matched_length_critical_field_conflict",
+      "expected_ocr": true,
+      "embedded_characters": 115,
+      "full_page_image": true,
+      "character_threshold_prediction": false,
+      "quality_router_prediction": true
+    }
+  ],
+  "production_cases": [
+    {
+      "case_id": "fda-guidance-process-validation-p0014-digital_control",
+      "variant": "digital_control",
+      "expected_method": "digital",
+      "final_method": "digital",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0,
+      "duration_seconds": 0.004398
+    },
+    {
+      "case_id": "fda-guidance-process-validation-p0014-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0068,
+      "duration_seconds": 0.994758
+    },
+    {
+      "case_id": "fda-guidance-process-validation-p0014-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0068,
+      "duration_seconds": 0.940465
+    },
+    {
+      "case_id": "fda-guidance-process-validation-p0014-corrupt_text_layer_200dpi",
+      "variant": "corrupt_text_layer_200dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0068,
+      "duration_seconds": 0.953218
+    },
+    {
+      "case_id": "fda-guidance-process-validation-p0014-corrupt_plausible_layer_200dpi",
+      "variant": "corrupt_plausible_layer_200dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0068,
+      "duration_seconds": 0.954904
+    },
+    {
+      "case_id": "fda-guidance-process-validation-p0014-correct_text_layer_200dpi",
+      "variant": "correct_text_layer_200dpi",
+      "expected_method": "digital",
+      "final_method": "digital",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0,
+      "duration_seconds": 0.96044
+    },
+    {
+      "case_id": "fda-guidance-aseptic-processing-p0038-digital_control",
+      "variant": "digital_control",
+      "expected_method": "digital",
+      "final_method": "digital",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0,
+      "duration_seconds": 0.003957
+    },
+    {
+      "case_id": "fda-guidance-aseptic-processing-p0038-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0048,
+      "duration_seconds": 0.947247
+    },
+    {
+      "case_id": "fda-guidance-aseptic-processing-p0038-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0048,
+      "duration_seconds": 0.925004
+    },
+    {
+      "case_id": "fda-guidance-aseptic-processing-p0038-corrupt_text_layer_200dpi",
+      "variant": "corrupt_text_layer_200dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0048,
+      "duration_seconds": 0.937828
+    },
+    {
+      "case_id": "fda-guidance-aseptic-processing-p0038-corrupt_plausible_layer_200dpi",
+      "variant": "corrupt_plausible_layer_200dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0048,
+      "duration_seconds": 0.941475
+    },
+    {
+      "case_id": "fda-guidance-aseptic-processing-p0038-correct_text_layer_200dpi",
+      "variant": "correct_text_layer_200dpi",
+      "expected_method": "digital",
+      "final_method": "digital",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0,
+      "duration_seconds": 0.938428
+    },
+    {
+      "case_id": "fda-guidance-data-integrity-cgmp-p0008-digital_control",
+      "variant": "digital_control",
+      "expected_method": "digital",
+      "final_method": "digital",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0,
+      "duration_seconds": 0.004279
+    },
+    {
+      "case_id": "fda-guidance-data-integrity-cgmp-p0008-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.017,
+      "duration_seconds": 0.925801
+    },
+    {
+      "case_id": "fda-guidance-data-integrity-cgmp-p0008-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.017,
+      "duration_seconds": 0.909486
+    },
+    {
+      "case_id": "fda-guidance-data-integrity-cgmp-p0008-corrupt_text_layer_200dpi",
+      "variant": "corrupt_text_layer_200dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.017,
+      "duration_seconds": 0.92819
+    },
+    {
+      "case_id": "fda-guidance-data-integrity-cgmp-p0008-corrupt_plausible_layer_200dpi",
+      "variant": "corrupt_plausible_layer_200dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.017,
+      "duration_seconds": 0.929868
+    },
+    {
+      "case_id": "fda-guidance-data-integrity-cgmp-p0008-correct_text_layer_200dpi",
+      "variant": "correct_text_layer_200dpi",
+      "expected_method": "digital",
+      "final_method": "digital",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0,
+      "duration_seconds": 0.929191
+    },
+    {
+      "case_id": "fda-guidance-oos-test-results-p0009-digital_control",
+      "variant": "digital_control",
+      "expected_method": "digital",
+      "final_method": "digital",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0,
+      "duration_seconds": 0.004438
+    },
+    {
+      "case_id": "fda-guidance-oos-test-results-p0009-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0154,
+      "duration_seconds": 0.849215
+    },
+    {
+      "case_id": "fda-guidance-oos-test-results-p0009-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0179,
+      "duration_seconds": 0.832334
+    },
+    {
+      "case_id": "fda-guidance-oos-test-results-p0009-corrupt_text_layer_200dpi",
+      "variant": "corrupt_text_layer_200dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0154,
+      "duration_seconds": 0.850679
+    },
+    {
+      "case_id": "fda-guidance-oos-test-results-p0009-corrupt_plausible_layer_200dpi",
+      "variant": "corrupt_plausible_layer_200dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0154,
+      "duration_seconds": 0.856599
+    },
+    {
+      "case_id": "fda-guidance-oos-test-results-p0009-correct_text_layer_200dpi",
+      "variant": "correct_text_layer_200dpi",
+      "expected_method": "digital",
+      "final_method": "digital",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0,
+      "duration_seconds": 0.852962
+    },
+    {
+      "case_id": "fda-guidance-tablet-size-shape-p0006-digital_control",
+      "variant": "digital_control",
+      "expected_method": "digital",
+      "final_method": "digital",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0,
+      "duration_seconds": 0.005371
+    },
+    {
+      "case_id": "fda-guidance-tablet-size-shape-p0006-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0435,
+      "duration_seconds": 1.086792
+    },
+    {
+      "case_id": "fda-guidance-tablet-size-shape-p0006-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0452,
+      "duration_seconds": 1.075531
+    },
+    {
+      "case_id": "fda-guidance-tablet-size-shape-p0006-corrupt_text_layer_200dpi",
+      "variant": "corrupt_text_layer_200dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0435,
+      "duration_seconds": 1.083199
+    },
+    {
+      "case_id": "fda-guidance-tablet-size-shape-p0006-corrupt_plausible_layer_200dpi",
+      "variant": "corrupt_plausible_layer_200dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0435,
+      "duration_seconds": 1.085969
+    },
+    {
+      "case_id": "fda-guidance-tablet-size-shape-p0006-correct_text_layer_200dpi",
+      "variant": "correct_text_layer_200dpi",
+      "expected_method": "digital",
+      "final_method": "digital",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0,
+      "duration_seconds": 1.088062
+    },
+    {
+      "case_id": "fda-guidance-high-risk-components-p0007-digital_control",
+      "variant": "digital_control",
+      "expected_method": "digital",
+      "final_method": "digital",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0,
+      "duration_seconds": 0.005892
+    },
+    {
+      "case_id": "fda-guidance-high-risk-components-p0007-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0248,
+      "duration_seconds": 1.271784
+    },
+    {
+      "case_id": "fda-guidance-high-risk-components-p0007-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0481,
+      "duration_seconds": 1.302405
+    },
+    {
+      "case_id": "fda-guidance-high-risk-components-p0007-corrupt_text_layer_200dpi",
+      "variant": "corrupt_text_layer_200dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0248,
+      "duration_seconds": 1.282341
+    },
+    {
+      "case_id": "fda-guidance-high-risk-components-p0007-corrupt_plausible_layer_200dpi",
+      "variant": "corrupt_plausible_layer_200dpi",
+      "expected_method": "ocr",
+      "final_method": "ocr",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0248,
+      "duration_seconds": 1.284467
+    },
+    {
+      "case_id": "fda-guidance-high-risk-components-p0007-correct_text_layer_200dpi",
+      "variant": "correct_text_layer_200dpi",
+      "expected_method": "digital",
+      "final_method": "digital",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0,
+      "duration_seconds": 1.288092
+    },
+    {
+      "case_id": "synthetic-repetitive_digital_certificate",
+      "variant": "repetitive_digital_certificate",
+      "expected_method": "digital",
+      "final_method": "digital",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": 0.0,
+      "duration_seconds": 0.000802
+    },
+    {
+      "case_id": "synthetic-matched_length_critical_field_conflict",
+      "variant": "matched_length_critical_field_conflict",
+      "expected_method": "rejected",
+      "final_method": "rejected",
+      "method_correct": true,
+      "key_phrase_recovered": true,
+      "word_error_rate": null,
+      "duration_seconds": 0.128769
+    }
+  ],
+  "ocr_cases": [
+    {
+      "case_id": "fda-guidance-process-validation-p0014-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "configuration": "psm3_auto",
+      "duration_seconds": 0.969123,
+      "word_error_rate": 0.016,
+      "character_similarity": 0.9704,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-process-validation-p0014-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "configuration": "psm6_block",
+      "duration_seconds": 0.923688,
+      "word_error_rate": 0.0068,
+      "character_similarity": 0.9983,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-process-validation-p0014-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "configuration": "psm6_block",
+      "duration_seconds": 0.943307,
+      "word_error_rate": 0.0068,
+      "character_similarity": 0.967,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-process-validation-p0014-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "configuration": "psm3_auto",
+      "duration_seconds": 0.987157,
+      "word_error_rate": 0.0205,
+      "character_similarity": 0.9806,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-aseptic-processing-p0038-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "configuration": "psm3_auto",
+      "duration_seconds": 0.946651,
+      "word_error_rate": 0.0048,
+      "character_similarity": 0.999,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-aseptic-processing-p0038-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "configuration": "psm6_block",
+      "duration_seconds": 0.907649,
+      "word_error_rate": 0.0048,
+      "character_similarity": 0.999,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-aseptic-processing-p0038-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "configuration": "psm6_block",
+      "duration_seconds": 0.922474,
+      "word_error_rate": 0.0048,
+      "character_similarity": 0.999,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-aseptic-processing-p0038-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "configuration": "psm3_auto",
+      "duration_seconds": 0.969992,
+      "word_error_rate": 0.0048,
+      "character_similarity": 0.999,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-data-integrity-cgmp-p0008-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "configuration": "psm3_auto",
+      "duration_seconds": 0.939503,
+      "word_error_rate": 0.017,
+      "character_similarity": 0.9965,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-data-integrity-cgmp-p0008-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "configuration": "psm6_block",
+      "duration_seconds": 0.894893,
+      "word_error_rate": 0.017,
+      "character_similarity": 0.997,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-data-integrity-cgmp-p0008-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "configuration": "psm6_block",
+      "duration_seconds": 0.913118,
+      "word_error_rate": 0.017,
+      "character_similarity": 0.9963,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-data-integrity-cgmp-p0008-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "configuration": "psm3_auto",
+      "duration_seconds": 0.955779,
+      "word_error_rate": 0.0191,
+      "character_similarity": 0.9965,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-oos-test-results-p0009-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "configuration": "psm3_auto",
+      "duration_seconds": 0.855873,
+      "word_error_rate": 0.0103,
+      "character_similarity": 0.9984,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-oos-test-results-p0009-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "configuration": "psm6_block",
+      "duration_seconds": 0.821114,
+      "word_error_rate": 0.0154,
+      "character_similarity": 0.998,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-oos-test-results-p0009-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "configuration": "psm6_block",
+      "duration_seconds": 0.832547,
+      "word_error_rate": 0.0179,
+      "character_similarity": 0.9973,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-oos-test-results-p0009-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "configuration": "psm3_auto",
+      "duration_seconds": 0.87216,
+      "word_error_rate": 0.0205,
+      "character_similarity": 0.9967,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-tablet-size-shape-p0006-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "configuration": "psm3_auto",
+      "duration_seconds": 1.098989,
+      "word_error_rate": 0.0418,
+      "character_similarity": 0.9899,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-tablet-size-shape-p0006-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "configuration": "psm6_block",
+      "duration_seconds": 1.053029,
+      "word_error_rate": 0.0435,
+      "character_similarity": 0.9884,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-tablet-size-shape-p0006-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "configuration": "psm6_block",
+      "duration_seconds": 1.077017,
+      "word_error_rate": 0.0452,
+      "character_similarity": 0.9843,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-tablet-size-shape-p0006-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "configuration": "psm3_auto",
+      "duration_seconds": 1.132187,
+      "word_error_rate": 0.0452,
+      "character_similarity": 0.9887,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-high-risk-components-p0007-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "configuration": "psm3_auto",
+      "duration_seconds": 1.311682,
+      "word_error_rate": 0.0261,
+      "character_similarity": 0.9936,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-high-risk-components-p0007-image_scan_200dpi",
+      "variant": "image_scan_200dpi",
+      "configuration": "psm6_block",
+      "duration_seconds": 1.248555,
+      "word_error_rate": 0.0248,
+      "character_similarity": 0.9936,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-high-risk-components-p0007-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "configuration": "psm6_block",
+      "duration_seconds": 1.302913,
+      "word_error_rate": 0.0481,
+      "character_similarity": 0.98,
+      "key_phrase_recovered": true
+    },
+    {
+      "case_id": "fda-guidance-high-risk-components-p0007-degraded_scan_120dpi",
+      "variant": "degraded_scan_120dpi",
+      "configuration": "psm3_auto",
+      "duration_seconds": 1.337602,
+      "word_error_rate": 0.0468,
+      "character_similarity": 0.8701,
+      "key_phrase_recovered": true
+    }
+  ],
+  "notes": [
+    "Stress PDFs are deterministic derivatives of frozen FDA corpus pages and are not committed.",
+    "Digital source text is the reference; this is a controlled engineering benchmark, not independently transcribed ground truth.",
+    "Character similarity uses SequenceMatcher; word error rate uses token-level edit distance.",
+    "OCR configuration metrics use 12 unique visible scan images; hidden-text variants are evaluated only as routing scenarios.",
+    "A matched-length critical-field disagreement is expected to fail extraction rather than select either conflicting value.",
+    "OCR latency excludes PDF rasterization, includes only the Tesseract call, uses one warm-up per configuration, and alternates execution order by page."
+  ]
+}

@@ -23,4 +23,17 @@ pharma-pipeline ingest-corpus
 
 The validated core contains 16 PDFs and 430 pages. It intentionally uses FDA-authored guidance and compliance-program documents rather than sponsor-authored labels or submissions, whose redistribution rights can be less clear.
 
-This corpus currently emphasizes digitally generated guidance documents. Image-only test variants will be created separately from a documented subset so OCR results can be compared against the original digital text.
+## OCR Stress Set
+
+`ocr-stress-manifest.json` selects six labeled pages from the frozen core corpus. `pharma-pipeline benchmark-ocr` deterministically generates six one-page variants for each source page in `data/corpus/scanned/`:
+
+- Original digital page as a control.
+- 200-DPI image-only scan.
+- Lower-contrast 120-DPI JPEG scan.
+- 200-DPI scan with a repetitive corrupted hidden text layer.
+- 200-DPI scan with plausible but incorrect hidden OCR text.
+- 200-DPI scan with an accurate hidden text layer, used to verify that OCR does not replace better embedded text.
+
+A separate clean digital certificate with repetitive `Pass` values acts as a form-style negative control. A synthetic scan with a matched-length but conflicting lot number and release status verifies that ambiguous critical fields fail extraction instead of silently selecting either value.
+
+Generated PDFs remain ignored because the manifest, frozen source hashes, page numbers, and transformation code reproduce them. Original digital text is used as controlled ground truth. This design measures known degradation modes but does not represent handwriting, severe rotation, damaged pages, or every pharmaceutical form layout.

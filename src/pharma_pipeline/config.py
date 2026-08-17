@@ -15,7 +15,7 @@ class Settings:
     chunk_size: int = 700
     chunk_overlap: int = 120
     ocr_min_chars: int = 50
-    parser_version: str = "pymupdf-tesseract-v1"
+    parser_version: str = "pymupdf-tesseract-v2-quality-routing"
     chunker_version: str = "character-overlap-v1"
 
     @classmethod

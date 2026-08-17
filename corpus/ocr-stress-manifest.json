@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "name": "FDA OCR Routing Stress Set",
+  "description": "Deterministic scan variants derived from hash-frozen FDA corpus pages. Generated PDFs are ignored; this manifest and the source corpus hashes make the benchmark reproducible.",
+  "variants": [
+    {"name": "digital_control", "should_ocr": false, "expected_method": "digital"},
+    {"name": "image_scan_200dpi", "should_ocr": true, "expected_method": "ocr"},
+    {"name": "degraded_scan_120dpi", "should_ocr": true, "expected_method": "ocr"},
+    {"name": "corrupt_text_layer_200dpi", "should_ocr": true, "expected_method": "ocr"},
+    {"name": "corrupt_plausible_layer_200dpi", "should_ocr": true, "expected_method": "ocr"},
+    {"name": "correct_text_layer_200dpi", "should_ocr": true, "expected_method": "digital"}
+  ],
+  "synthetic_controls": [
+    {
+      "name": "repetitive_digital_certificate",
+      "should_ocr": false,
+      "expected_method": "digital",
+      "text": "Certificate of Quality\nTest Result: Pass\nAppearance: Pass\nIdentity: Pass\nAssay: Pass\nPackage Integrity: Pass\nRelease Status: Pass\n"
+    }
+  ],
+  "synthetic_scan_controls": [
+    {
+      "name": "matched_length_critical_field_conflict",
+      "should_ocr": true,
+      "expected_method": "rejected",
+      "visible_text": "Certificate of Quality\nLot Number: 18356721\nArticle Number: 28 9301 82\nRelease Status: Pass\nPackage Integrity: Pass\n",
+      "hidden_text": "Certificate of Quality\nLot Number: 18356722\nArticle Number: 28 9301 83\nRelease Status: Fail\nPackage Integrity: Pass\n"
+    }
+  ],
+  "pages": [
+    {
+      "document_id": "fda-guidance-process-validation",
+      "filename": "fda-guidance-process-validation.pdf",
+      "source_sha256": "821788a1127a9215670e60a7010e35bf2eafb408cf346e74440fb73a01869792",
+      "page": 14,
+      "key_phrase": "must successfully complete PPQ before commencing commercial distribution"
+    },
+    {
+      "document_id": "fda-guidance-aseptic-processing",
+      "filename": "fda-guidance-aseptic-processing.pdf",
+      "source_sha256": "6971a83145b89dd839d217a9885fbdb7da62b4a6a31587a03e7901a5a8b7a0dd",
+      "page": 38,
+      "key_phrase": "a sound disinfectant program also includes a sporicidal agent"
+    },
+    {
+      "document_id": "fda-guidance-data-integrity-cgmp",
+      "filename": "fda-guidance-data-integrity-cgmp.pdf",
+      "source_sha256": "1b5074c592ed75035022566b6e151c219b5b6349414beaf4229e73117a0997c6",
+      "page": 8,
+      "key_phrase": "data integrity refers to the completeness consistency and accuracy of data"
+    },
+    {
+      "document_id": "fda-guidance-oos-test-results",
+      "filename": "fda-guidance-oos-test-results.pdf",
+      "source_sha256": "610ddda142912b1dfe084afb5e1b4909af72c9b39175695e76eaf3cdad5d0e1c",
+      "page": 9,
+      "key_phrase": "INVESTIGATING OOS TEST RESULTS PHASE II FULL SCALE OOS INVESTIGATION"
+    },
+    {
+      "document_id": "fda-guidance-tablet-size-shape",
+      "filename": "fda-guidance-tablet-size-shape.pdf",
+      "source_sha256": "6b94a3440d4b1f405cca49496938f5be21af41f82c644c017370470cda701035",
+      "page": 6,
+      "key_phrase": "tablet sizes greater than approximately 8 mm in diameter"
+    },
+    {
+      "document_id": "fda-guidance-high-risk-components",
+      "filename": "fda-guidance-high-risk-components.pdf",
+      "source_sha256": "277d9381178b81cf1ba40f3b5f23702ca65ce62a5c3c09a4198ec19458f0b449",
+      "page": 7,
+      "key_phrase": "manufactured in compliance with all applicable FDA laws and regulations"
+    }
+  ]
+}

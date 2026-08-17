@@ -7,7 +7,8 @@ This file prevents unsupported resume claims. A claim moves to **verified** only
 | Processed 16 PDFs and 430 pages into 1,987 chunks | Frozen manifest, corpus ingestion run, and saved 10-run benchmark | Verified locally |
 | Skipped duplicate and unchanged PDFs | Duplicate-ingestion test plus corpus replay | Verified: all 16 corpus files skipped on replay |
 | Incrementally handled updated PDFs | Version test showing `supersedes_document_id` and one current version | Implemented and tested |
-| Used OCR fallback for scanned files | OCR test plus corpus OCR-page count | Verified: generated image-only test and 1 routed corpus page; OCR accuracy not measured |
+| Improved OCR routing for scanned and hidden-text pages | Versioned 38-case stress manifest, production-extractor results, full-corpus routing audit, and saved raw benchmark | Verified locally: routing recall improved from 38.71% to 100%; all expected outcomes, including one rejected field conflict; no added routes across the 430-page core audit |
+| Measured Tesseract transcription quality and latency | 12 unique visible scan images with digital references and six labeled phrases | Verified locally: `--psm 6` mean WER 2.10%, 100% phrase recovery, 0.9231-second p50; controlled set only |
 | Evaluated 21 retrieval configurations on 80 labeled questions | Committed development/validation/acceptance/test labels and raw experiment artifact | Verified locally |
 | Retained BM25 after hybrid retrieval underperformed on acceptance data | Separate 16-question acceptance split used before the final test | Verified locally: 100.00% versus 93.75% Recall@5 |
 | Confirmed the locked choice on untouched test data | Final 16-question test split created without retrieval-output inspection | Verified locally: BM25 100.00% versus hybrid 87.50% Recall@5; do not generalize perfect recall |
@@ -27,7 +28,7 @@ A changed PDF receives a new immutable document version. The earlier version rem
 
 ### OCR routing
 
-Digital pages use embedded text because it is faster and generally more accurate. Low-text pages are rendered and sent through Tesseract so scanned documents still enter the same page and chunk contract.
+The original character threshold handled image-only scans but trusted hidden OCR layers. A reproducible stress set exposed the gap: baseline recall was 38.71%. Adding full-page image evidence and a fragmented-text signal raised routing recall to 100% across 38 scenarios without adding routes in a 430-page core-corpus audit. Output selection preserved accurate embedded text after OCR verification, while critical-field disagreement failed safely instead of becoming searchable. Tesseract `--psm 6` remained because it had slightly lower word error rate than `--psm 3`; engine-level comparisons remain a future experiment.
 
 ### Failure isolation
 

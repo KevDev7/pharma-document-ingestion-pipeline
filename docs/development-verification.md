@@ -12,7 +12,7 @@ Command:
 .venv/bin/pytest
 ```
 
-Result: **36 tests passed**.
+Result: **44 tests passed**.
 
 The tests cover:
 
@@ -22,6 +22,7 @@ The tests cover:
 - A changed file superseding the prior document version.
 - A corrupt PDF being recorded and moved to quarantine.
 - Tesseract OCR fallback on a generated image-only PDF.
+- Quality-aware OCR routing for corrupted hidden text plus deterministic stress-corpus generation and metric aggregation.
 - Corpus manifest validation, download receipts, frozen-hash enforcement, and repeatable benchmark counts.
 - Retrieval label validation, page-level scoring, duplicate-page collapse, chunking strategies, FTS5 BM25, reciprocal-rank fusion, manifest metadata, and vector cache behavior.
 - Durable-index migration/backfill, interrupted-migration recovery, transactional insert/update/delete behavior, duplicate stability, current-version indexing, restart persistence, metadata filtering, rollback, and recovery rebuild.
@@ -90,12 +91,30 @@ Ten runs each used a fresh temporary SQLite database and produced identical file
 
 | Measure | Result |
 | --- | ---: |
-| p50 duration | 1.2635 seconds |
-| p95 duration | 1.3037 seconds |
-| Pages/second at p50 duration | 340.32 |
-| Pages/second at p95 duration | 329.82 |
+| p50 duration | 1.3138 seconds |
+| p95 duration | 1.3622 seconds |
+| Pages/second at p50 duration | 327.28 |
+| Pages/second at p95 duration | 315.67 |
 
 These local timings include transactional FTS5 updates, exclude download time, and reuse the same files, so operating-system caches may be warm. They are a reproducible development benchmark, not a production capacity claim. Raw run data and environment details are saved in [`docs/benchmarks/corpus-ingestion-2026-08-17.json`](benchmarks/corpus-ingestion-2026-08-17.json).
+
+## OCR Routing and Accuracy
+
+Six frozen FDA pages were converted into 36 cases: digital controls, 200-DPI image scans, degraded 120-DPI scans, two corrupted hidden-text styles, and accurate hidden-text scans. A clean repetitive certificate and a matched-length critical-field conflict brought the total to 38 scenarios. Thirty-one were labeled to run OCR; 24 were expected to store OCR output, six accurate-layer scans were expected to retain embedded text, and one field conflict was expected to fail extraction.
+
+| Routing design | Precision | Recall | F1 |
+| --- | ---: | ---: | ---: |
+| Character count only | 100.00% | 38.71% | 55.81% |
+| Page-aware routing | 100.00% | 100.00% | 100.00% |
+
+The production extractor produced the expected outcome on all 38 scenarios and recovered the labeled phrase in all 24 scenarios expected to store OCR output. It preserved all six accurate hidden layers and rejected the matched-length lot-number/status conflict. A separate short-value regression test confirms that short valid OCR can replace longer fragmented garbage. The improved router added no OCR routes when separately audited across all 430 core-corpus pages; both methods routed the same one low-text page.
+
+| Tesseract configuration | Mean word error rate | Key-phrase accuracy | p50 seconds/page | p95 seconds/page |
+| --- | ---: | ---: | ---: | ---: |
+| `--psm 3` | 2.27% | 100.00% | 0.9696 | 1.3233 |
+| `--psm 6` | 2.10% | 100.00% | 0.9231 | 1.2730 |
+
+OCR quality uses 12 unique visible images rather than double-counting hidden-text variants that share the same raster. The digital source text is controlled ground truth, not an independent transcription. OCR latency excludes rasterization, uses one warm-up per configuration, and alternates execution order. The result supports the routing change and retaining `--psm 6`; it does not establish performance on handwriting or heavily damaged scans. Raw cases and measurements are saved in [`docs/benchmarks/ocr-routing-2026-08-17.json`](benchmarks/ocr-routing-2026-08-17.json).
 
 ## Durable Search Index
 

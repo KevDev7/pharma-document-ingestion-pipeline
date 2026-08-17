@@ -71,3 +71,11 @@
 **Reason:** The corpus and ingestion state already live in one single-worker SQLite database. Transactional triggers make new chunks searchable immediately, prevent a separate indexing job from falling behind, and keep every result linked to its document version and page.
 
 **Trade-off:** Superseded chunks remain in source tables for audit but are removed from the active index, adding document-version trigger logic to prevent stale versions from affecting BM25 scores. At this small corpus size, full rebuilds and incremental chunk batches take roughly the same wall-clock time, so this milestone proves bounded updates and consistency rather than a meaningful latency win. PostgreSQL or a managed search system is not justified until concurrency or corpus size changes substantially.
+
+## 010: Route OCR using text-quality signals
+
+**Decision:** Keep the 50-character floor, but also route embedded text dominated by one-character tokens or paired with a full-page raster image. Retain Tesseract `--psm 6` for the current CPU pipeline.
+
+**Reason:** On 38 controlled routing scenarios, the character-only rule missed 19 scans carrying hidden text and reached 38.71% recall. The page-aware rule reached 100% routing recall, and the final extractor produced the expected outcome in all 38 scenarios, including six accurate text layers, a clean repetitive certificate, and one rejected critical-field conflict. It added no OCR routes across the 430-page core audit. On 12 unique visible scan images, `--psm 6` produced 2.10% mean word error rate versus 2.27% for `--psm 3`; both recovered every labeled phrase. Timing used warm-ups and alternating order, with only a modest local `--psm 6` advantage.
+
+**Trade-off:** The stress set is controlled and uses born-digital text as its reference. It does not establish general OCR accuracy or prove Tesseract is better than EasyOCR or PaddleOCR. A critical-field disagreement quarantines the whole file because the current schema does not preserve two competing transcriptions; this loses automatic throughput to prevent a potentially wrong compliance value from becoming searchable.

@@ -1,4 +1,5 @@
 import shutil
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List
@@ -8,6 +9,66 @@ import pytesseract
 from PIL import Image
 
 from .text import classify_document_type, clean_text
+
+
+class OcrConflictError(ValueError):
+    pass
+
+
+CRITICAL_FIELD_LABELS = {
+    "lot_number": re.compile(r"^\s*lot\s+(?:number|no\.?)\b", re.I),
+    "batch_number": re.compile(r"^\s*batch\s+(?:number|no\.?)\b", re.I),
+    "article_number": re.compile(
+        r"^\s*(?:product\s+)?(?:article|part)\s+(?:number|no\.?)\b", re.I
+    ),
+    "expiration_date": re.compile(r"^\s*(?:expiration|expiry)\s+date\b", re.I),
+    "release_status": re.compile(r"^\s*release\s+status\b", re.I),
+}
+
+
+def extract_critical_fields(text: str) -> dict:
+    fields = {}
+    lines = text.splitlines()
+    for line_index, line in enumerate(lines):
+        for name, pattern in CRITICAL_FIELD_LABELS.items():
+            match = pattern.match(line)
+            if not match:
+                continue
+            value = line[match.end() :].strip(" \t:#-")
+            if not value and line_index + 1 < len(lines):
+                value = lines[line_index + 1].strip()
+            canonical_value = re.sub(r"[^a-z0-9]", "", value.lower())
+            if canonical_value:
+                fields[name] = canonical_value
+            break
+    return fields
+
+
+def page_has_full_page_image(page: fitz.Page, min_coverage: float = 0.80) -> bool:
+    page_area = page.rect.width * page.rect.height
+    if page_area <= 0:
+        return False
+    for image in page.get_image_info():
+        bounds = fitz.Rect(image["bbox"])
+        if bounds.width * bounds.height / page_area >= min_coverage:
+            return True
+    return False
+
+
+def text_has_fragmentation(text: str) -> bool:
+    tokens = re.findall(r"[A-Za-z0-9]+", text)
+    if len(tokens) < 20:
+        return False
+    return sum(len(token) == 1 for token in tokens) / len(tokens) > 0.45
+
+
+def should_use_ocr(
+    text: str,
+    min_chars: int = 50,
+    has_full_page_image: bool = False,
+) -> bool:
+    """Route empty, scan-backed, or clearly fragmented text through OCR."""
+    return len(text) < min_chars or has_full_page_image or text_has_fragmentation(text)
 
 
 @dataclass(frozen=True)
@@ -40,9 +101,33 @@ class PdfExtractor:
                 page_text = direct_text
                 method = "digital"
 
-                if len(direct_text) < self.ocr_min_chars and self.ocr_available:
+                full_page_image = page_has_full_page_image(page)
+                route_to_ocr = should_use_ocr(
+                    direct_text,
+                    self.ocr_min_chars,
+                    has_full_page_image=full_page_image,
+                )
+                if route_to_ocr and self.ocr_available:
                     ocr_text = clean_text(self._ocr_page(page))
-                    if len(ocr_text) > len(direct_text):
+                    ocr_has_content = len(re.findall(r"[A-Za-z0-9]+", ocr_text)) >= 2
+                    direct_fields = extract_critical_fields(direct_text)
+                    ocr_fields = extract_critical_fields(ocr_text)
+                    conflicts = {
+                        field: (direct_fields[field], ocr_fields[field])
+                        for field in direct_fields.keys() & ocr_fields.keys()
+                        if direct_fields[field] != ocr_fields[field]
+                    }
+                    if full_page_image and conflicts:
+                        names = ", ".join(sorted(conflicts))
+                        raise OcrConflictError(
+                            f"OCR conflicts with embedded critical fields: {names}"
+                        )
+                    replace_direct_text = len(ocr_text) > len(direct_text)
+                    if text_has_fragmentation(direct_text) and ocr_has_content:
+                        replace_direct_text = True
+                    elif full_page_image and len(direct_text) >= self.ocr_min_chars:
+                        replace_direct_text = len(ocr_text) > len(direct_text) * 1.25
+                    if replace_direct_text:
                         page_text = ocr_text
                         method = "ocr"
 

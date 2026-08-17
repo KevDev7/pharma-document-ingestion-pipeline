@@ -1,11 +1,13 @@
 import shutil
 from pathlib import Path
+from typing import Optional
 
 import fitz
 import pytest
 from PIL import Image, ImageDraw
 
 from pharma_pipeline.config import Settings
+from pharma_pipeline.extractor import extract_critical_fields
 from pharma_pipeline.pipeline import IngestionPipeline
 
 
@@ -28,6 +30,50 @@ def make_scanned_pdf(path: Path, text: str) -> None:
     document = fitz.open()
     page = document.new_page(width=700, height=250)
     page.insert_image(page.rect, filename=str(image_path))
+    document.save(path)
+    document.close()
+    image_path.unlink()
+
+
+def make_scanned_pdf_with_corrupt_text_layer(path: Path, text: str) -> None:
+    image = Image.new("RGB", (1400, 500), "white")
+    draw = ImageDraw.Draw(image)
+    draw.text((60, 150), text, fill="black", font_size=42)
+    image_path = path.with_suffix(".png")
+    image.save(image_path)
+
+    document = fitz.open()
+    page = document.new_page(width=700, height=250)
+    page.insert_image(page.rect, filename=str(image_path))
+    page.insert_textbox(
+        fitz.Rect(20, 20, 680, 80),
+        "l " * 30,
+        fontsize=5,
+        render_mode=3,
+    )
+    document.save(path)
+    document.close()
+    image_path.unlink()
+
+
+def make_scanned_pdf_with_correct_text_layer(
+    path: Path, text: str, layer_text: Optional[str] = None
+) -> None:
+    image = Image.new("RGB", (1400, 700), "white")
+    draw = ImageDraw.Draw(image)
+    draw.multiline_text((60, 100), text, fill="black", font_size=34, spacing=20)
+    image_path = path.with_suffix(".png")
+    image.save(image_path)
+
+    document = fitz.open()
+    page = document.new_page(width=700, height=350)
+    page.insert_image(page.rect, filename=str(image_path))
+    page.insert_textbox(
+        fitz.Rect(30, 30, 670, 320),
+        layer_text or text,
+        fontsize=10,
+        render_mode=3,
+    )
     document.save(path)
     document.close()
     image_path.unlink()
@@ -65,6 +111,22 @@ def test_ingestion_persists_lineage_and_skips_duplicate(
         "Certificate of Quality",
         "Packaging Specification",
     ]
+
+
+def test_critical_fields_preserve_spaced_identifiers() -> None:
+    fields = extract_critical_fields(
+        "Lot Number:\n18356721\n"
+        "Product Article Number: 28 9301 82\n"
+        "Expiration Date: 2026-03-15\n"
+        "Release Status: Pass"
+    )
+
+    assert fields == {
+        "lot_number": "18356721",
+        "article_number": "28930182",
+        "expiration_date": "20260315",
+        "release_status": "pass",
+    }
 
 
 def test_changed_file_supersedes_current_version(
@@ -117,3 +179,78 @@ def test_image_only_page_uses_ocr(pipeline: IngestionPipeline, tmp_path: Path) -
     )[0]
     assert page["extraction_method"] == "ocr"
     assert "87654321" in page["text"]
+
+
+@pytest.mark.skipif(shutil.which("tesseract") is None, reason="Tesseract is not installed")
+def test_corrupt_hidden_text_layer_uses_ocr(
+    pipeline: IngestionPipeline, tmp_path: Path
+) -> None:
+    pdf_path = tmp_path / "corrupt-layer.pdf"
+    make_scanned_pdf_with_corrupt_text_layer(
+        pdf_path,
+        "Lot Number 24681357",
+    )
+
+    result = pipeline.ingest_paths([pdf_path])
+
+    assert result["processed_files"] == 1
+    assert result["results"][0]["ocr_page_count"] == 1
+    page = pipeline.database.fetch_all(
+        "SELECT extraction_method, text FROM pages WHERE document_id = ?",
+        (result["results"][0]["document_id"],),
+    )[0]
+    assert page["extraction_method"] == "ocr"
+    assert "24681357" in page["text"]
+
+
+@pytest.mark.skipif(shutil.which("tesseract") is None, reason="Tesseract is not installed")
+def test_correct_hidden_text_layer_is_preserved(
+    pipeline: IngestionPipeline, tmp_path: Path
+) -> None:
+    pdf_path = tmp_path / "correct-layer.pdf"
+    expected_text = (
+        "Certificate of Quality\n"
+        "Lot Number 13572468\n"
+        "Package Integrity Pass\n"
+        "Release Status Approved"
+    )
+    make_scanned_pdf_with_correct_text_layer(pdf_path, expected_text)
+
+    result = pipeline.ingest_paths([pdf_path])
+
+    page = pipeline.database.fetch_all(
+        "SELECT extraction_method, text FROM pages WHERE document_id = ?",
+        (result["results"][0]["document_id"],),
+    )[0]
+    assert page["extraction_method"] == "digital"
+    assert "Integrity Pass" in page["text"]
+
+
+@pytest.mark.skipif(shutil.which("tesseract") is None, reason="Tesseract is not installed")
+def test_critical_field_conflict_fails_ingestion(
+    pipeline: IngestionPipeline, tmp_path: Path
+) -> None:
+    pdf_path = tmp_path / "conflict-layer.pdf"
+    visible_text = (
+        "Certificate of Quality\n"
+        "Lot Number: 18356721\n"
+        "Article Number: 28 9301 82\n"
+        "Release Status: Pass\n"
+        "Package Integrity: Pass"
+    )
+    hidden_text = (
+        "Certificate of Quality\n"
+        "Lot Number: 18356722\n"
+        "Article Number: 28 9301 83\n"
+        "Release Status: Fail\n"
+        "Package Integrity: Pass"
+    )
+    make_scanned_pdf_with_correct_text_layer(
+        pdf_path, visible_text, layer_text=hidden_text
+    )
+
+    result = pipeline.ingest_paths([pdf_path])
+
+    assert result["failed_files"] == 1
+    assert result["results"][0]["error_type"] == "OcrConflictError"
+    assert pipeline.database.summary()["document_versions"] == 0

@@ -74,9 +74,15 @@ This prevents duplicate records without claiming distributed exactly-once delive
 
 `chunk_search` is an FTS5 external-content index backed by a view of chunks from current document versions. Chunk and document-version triggers maintain it inside the same transaction as the source change. A successful ingestion therefore cannot commit current chunks without also making them searchable.
 
-Existing databases receive a one-time backfill when schema version 1 is first initialized. Normal startup checks the existing index and does not rebuild it. `pharma-pipeline index-status` runs SQLite's FTS integrity check, while `rebuild-search-index` is reserved for recovery.
+Existing databases receive a one-time backfill when the current search schema is first initialized. Normal startup checks the existing index and does not rebuild it. `pharma-pipeline index-status` runs SQLite's FTS integrity check, while `rebuild-search-index` is reserved for recovery.
 
 Search joins through `documents` and requires `is_current = 1`. When a version is superseded, its immutable source rows remain auditable but its postings are removed from the active index so stale versions cannot affect results or BM25 scores. Duplicate file events are rejected by SHA-256 before chunk insertion and therefore do not grow the index.
+
+## OCR Routing
+
+The extractor keeps digital text when it is sufficiently long and does not look fragmented. It routes a page to Tesseract when embedded text is short, dominated by one-character tokens, or paired with an image covering at least 80% of the page. Full-page image evidence catches scanned pages even when a hidden OCR layer contains plausible but incorrect text.
+
+The committed stress manifest reconstructs 38 routing scenarios from six frozen FDA pages and two synthetic controls. It includes image-only scans, two corrupted hidden-text styles, accurate hidden-text scans, and a matched-length critical-field conflict. The benchmark compares the original character threshold with the page-aware router, scores final `PdfExtractor` output, and measures Tesseract `--psm 3` versus `--psm 6` on 12 unique visible scan images. A disagreement in critical fields such as lot number or release status fails extraction rather than silently choosing either value. Generated scan derivatives remain outside Git; the source hashes, page labels, and transformation settings are versioned.
 
 ## Intended Cloud Boundary
 

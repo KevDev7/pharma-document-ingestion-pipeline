@@ -1,5 +1,5 @@
 {
-  "measured_at": "2026-08-17T21:07:19.550288+00:00",
+  "measured_at": "2026-08-17T21:25:35.945565+00:00",
   "corpus_directory": "data/corpus/raw",
   "corpus_files": 16,
   "corpus_bytes": 6159783,
@@ -16,19 +16,19 @@
     "chunks": 1987
   },
   "duration_seconds": {
-    "minimum": 1.257,
-    "p50": 1.2635,
-    "p95": 1.3037,
-    "maximum": 1.3305
+    "minimum": 1.3002,
+    "p50": 1.3138,
+    "p95": 1.3622,
+    "maximum": 1.3719
   },
   "pages_per_second": {
-    "at_p50_duration": 340.32,
-    "at_p95_duration": 329.82
+    "at_p50_duration": 327.28,
+    "at_p95_duration": 315.67
   },
   "run_results": [
     {
       "run": 1,
-      "duration_seconds": 1.3305,
+      "duration_seconds": 1.3719,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,
@@ -36,7 +36,7 @@
     },
     {
       "run": 2,
-      "duration_seconds": 1.2617,
+      "duration_seconds": 1.303,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,
@@ -44,7 +44,7 @@
     },
     {
       "run": 3,
-      "duration_seconds": 1.2653,
+      "duration_seconds": 1.3002,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,
@@ -52,7 +52,7 @@
     },
     {
       "run": 4,
-      "duration_seconds": 1.257,
+      "duration_seconds": 1.3087,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,
@@ -60,7 +60,7 @@
     },
     {
       "run": 5,
-      "duration_seconds": 1.2604,
+      "duration_seconds": 1.3078,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,
@@ -68,7 +68,7 @@
     },
     {
       "run": 6,
-      "duration_seconds": 1.2604,
+      "duration_seconds": 1.3068,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,
@@ -76,7 +76,7 @@
     },
     {
       "run": 7,
-      "duration_seconds": 1.2599,
+      "duration_seconds": 1.3503,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,
@@ -84,7 +84,7 @@
     },
     {
       "run": 8,
-      "duration_seconds": 1.2666,
+      "duration_seconds": 1.3253,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,
@@ -92,7 +92,7 @@
     },
     {
       "run": 9,
-      "duration_seconds": 1.271,
+      "duration_seconds": 1.319,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,
@@ -100,7 +100,7 @@
     },
     {
       "run": 10,
-      "duration_seconds": 1.2684,
+      "duration_seconds": 1.3427,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,

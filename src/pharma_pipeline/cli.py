@@ -8,6 +8,7 @@ from .benchmark import benchmark_corpus
 from .config import DEFAULT_ROOT, Settings
 from .corpus import download_manifest, summarize_corpus
 from .experiments import run_retrieval_experiment
+from .ocr_benchmark import run_ocr_benchmark
 from .pipeline import IngestionPipeline
 from .search_benchmark import benchmark_search_index
 from .watcher import watch_directory
@@ -55,6 +56,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     search_benchmark.add_argument("--runs", type=int, default=10)
     search_benchmark.add_argument("--output", type=Path, default=None)
+
+    ocr_benchmark = subparsers.add_parser(
+        "benchmark-ocr",
+        help="Generate controlled scan variants and evaluate OCR routing and accuracy",
+    )
+    ocr_benchmark.add_argument(
+        "--manifest",
+        type=Path,
+        default=None,
+        help="OCR stress manifest (defaults to corpus/ocr-stress-manifest.json)",
+    )
+    ocr_benchmark.add_argument("--output", type=Path, default=None)
 
     download = subparsers.add_parser(
         "download-corpus", help="Download PDFs declared in a provenance manifest"
@@ -136,6 +149,16 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         output = pipeline.database.rebuild_search_index()
     elif args.command == "benchmark-search-index":
         output = benchmark_search_index(settings.database_path, runs=args.runs)
+        if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(json.dumps(output, indent=2) + "\n", encoding="utf-8")
+    elif args.command == "benchmark-ocr":
+        manifest_path = args.manifest or settings.root / "corpus" / "ocr-stress-manifest.json"
+        output = run_ocr_benchmark(
+            settings.corpus_raw_dir,
+            settings.corpus_scanned_dir,
+            manifest_path,
+        )
         if args.output:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(json.dumps(output, indent=2) + "\n", encoding="utf-8")

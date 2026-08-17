@@ -9,7 +9,7 @@ This repository intentionally separates ingestion from the future retrieval appl
 - Detects new PDFs placed in a watched directory.
 - Uses SHA-256 content hashes to skip duplicate documents.
 - Extracts digital PDF text with PyMuPDF.
-- Runs Tesseract OCR only when a page has too little embedded text.
+- Runs Tesseract OCR when embedded text is missing or shows clear corruption signals.
 - Preserves document, page, and chunk lineage in SQLite.
 - Updates a durable SQLite FTS5/BM25 index in the same transaction as new chunks.
 - Searches only current document versions while retaining superseded source records for audit.
@@ -19,6 +19,7 @@ This repository intentionally separates ingestion from the future retrieval appl
 - Reconstructs a hash-frozen FDA corpus from a versioned provenance manifest.
 - Benchmarks repeated ingestion with a fresh SQLite database for each run.
 - Evaluates 21 chunking, embedding, and retrieval configurations on 80 labeled questions.
+- Rebuilds a 38-case OCR stress set from six frozen FDA pages plus synthetic controls and records routing, transcription, and latency metrics.
 
 ## Quick Start
 
@@ -56,6 +57,17 @@ pharma-pipeline benchmark-corpus --runs 10 --output docs/benchmarks/corpus-inges
 ```
 
 The current core corpus contains 16 FDA-authored pharmaceutical quality documents totaling 430 pages. The verified ingestion run produced 1,987 page-linked chunks, and a duplicate replay skipped all 16 files by content hash. See [corpus/README.md](corpus/README.md) for provenance and [the saved benchmark](docs/benchmarks/corpus-ingestion-2026-08-17.json) for full measurements and limitations.
+
+## OCR Stress Evaluation
+
+Generate controlled digital, image-only, degraded, and corrupted-text-layer variants from six frozen FDA source pages:
+
+```bash
+pharma-pipeline benchmark-ocr \
+  --output docs/benchmarks/ocr-routing-2026-08-17.json
+```
+
+The original character-count router reached 38.71% recall on the 38-case stress set because hidden text bypassed OCR verification. The page-aware router reached 100% recall, while the production extractor produced the expected outcome in all 38 scenarios, including preserving six accurate text layers and rejecting one matched-length critical-field conflict. The router added no work during a separate audit of all 430 core-corpus pages. On 12 unique visible scan images, Tesseract `--psm 6` recovered every labeled phrase with 2.10% mean word error rate and 0.91-second p50 OCR time per page. These are controlled local measurements, not a general OCR accuracy claim.
 
 ## Retrieval Evaluation
 
