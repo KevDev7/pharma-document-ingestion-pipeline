@@ -12,6 +12,7 @@ This file prevents unsupported resume claims. A claim moves to **verified** only
 | Retained BM25 after hybrid retrieval underperformed on acceptance data | Separate 16-question acceptance split used before the final test | Verified locally: 100.00% versus 93.75% Recall@5 |
 | Confirmed the locked choice on untouched test data | Final 16-question test split created without retrieval-output inspection | Verified locally: BM25 100.00% versus hybrid 87.50% Recall@5; do not generalize perfect recall |
 | Measured p95 retrieval latency across repeated interleaved trials | 80 raw timing samples per retriever | Verified locally: BM25 1.17 ms; hybrid candidate 11.74 ms |
+| Incrementally maintained a durable BM25 index | Trigger lifecycle tests, restart test, integrity check, and saved index benchmark | Verified locally: 77-chunk update transaction; duplicate replay added zero chunks |
 | Ran on S3/SQS | Deployed infrastructure and captured run evidence | Not built; do not claim |
 
 ## Intended Interview Stories
@@ -36,8 +37,12 @@ One corrupt PDF produces an error record and moves to quarantine. Other files in
 
 The project compared 21 configurations using separate development, validation, acceptance, and untouched test questions. BGE-small hybrid retrieval looked stronger during development but lost to boundary-aware BM25 on acceptance Recall@5 and MRR. The simpler BM25 path was locked before final testing. On the untouched test, BM25 reached 100% Recall@5 versus 87.5% for hybrid and was about 10 times faster at p95. The largest tested index was only 2,068 chunks, so exact local vector search was more explainable than adding an approximate vector database.
 
+### Incremental search indexing
+
+FTS5 triggers update the selected BM25 index inside the same transaction as chunk and document-version changes. Duplicate events add no index rows, superseded versions are removed from the active index, and a one-time migration backfilled existing data. The local benchmark did not show a meaningful latency win over rebuilding at this corpus size, so the defensible claim is bounded incremental work and consistency, not faster indexing.
+
 ## Draft Resume Shape
 
 1. Built an event-driven pipeline that processed **16 FDA PDFs / 430 pages** into **1,987 page-linked chunks**, using content hashes to skip duplicate files.
-2. Added OCR fallback, document versioning, failure quarantine, and page-level lineage for incremental PDF ingestion.
+2. Added OCR fallback, document versioning, failure quarantine, page-level lineage, and transactional BM25 index updates.
 3. Evaluated **21 retrieval configurations on 80 labeled questions** and retained BM25 after acceptance testing; it later beat the hybrid candidate by **12.5 Recall@5 points** on untouched test data.

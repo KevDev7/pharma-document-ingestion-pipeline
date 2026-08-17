@@ -11,6 +11,8 @@ This repository intentionally separates ingestion from the future retrieval appl
 - Extracts digital PDF text with PyMuPDF.
 - Runs Tesseract OCR only when a page has too little embedded text.
 - Preserves document, page, and chunk lineage in SQLite.
+- Updates a durable SQLite FTS5/BM25 index in the same transaction as new chunks.
+- Searches only current document versions while retaining superseded source records for audit.
 - Tracks processing runs, failures, superseded file versions, page counts, and OCR usage.
 - Archives successfully processed files and quarantines failures.
 - Includes automated tests for ingestion, duplicate handling, version replacement, and OCR fallback.
@@ -38,6 +40,8 @@ You can also process files directly without moving them:
 ```bash
 pharma-pipeline ingest /path/to/document.pdf
 pharma-pipeline status
+pharma-pipeline search "What must be completed before commercial distribution?" --top-k 5
+pharma-pipeline index-status
 ```
 
 ## Reproducible Corpus
@@ -73,10 +77,12 @@ The SQLite database at `data/state/pipeline.db` contains:
 - `documents`: content hash, source path, version, processing status, and aggregate counts.
 - `pages`: extracted text, page number, document type, and extraction method.
 - `chunks`: deterministic chunk IDs and page-level source lineage.
+- `chunk_search`: durable FTS5 index maintained by chunk-table triggers.
+- `search_index_state`: index schema, initial backfill, and recovery-rebuild metadata.
 - `ingestion_errors`: files that failed with their error messages.
 
 See [docs/architecture.md](docs/architecture.md) for the system boundary and [docs/resume-evidence.md](docs/resume-evidence.md) for the claim ledger.
 
 ## Current Scope
 
-This milestone does not use Docker, Airflow, a managed vector database, or cloud services. Exact local vector search is sufficient for the current 2,068-chunk maximum experiment. The next milestone is durable incremental retrieval indexing; cloud object events come later only if local measurements justify the migration.
+This milestone does not use Docker, Airflow, a managed vector database, or cloud services. SQLite FTS5 is sufficient for the current corpus and updates incrementally with each ingested document. The next evidence gap is OCR routing quality on a deliberately scanned stress corpus; cloud object events come later only if local measurements justify the migration.

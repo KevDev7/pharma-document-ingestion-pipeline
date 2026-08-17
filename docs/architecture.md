@@ -20,6 +20,9 @@ page classification + overlapping chunks
         v
 SQLite documents/pages/chunks/run metrics
         |
+        v
+transactional FTS5 trigger update
+        |
         +--> data/archive/      successful or duplicate PDFs
         +--> data/quarantine/   failed PDFs
 ```
@@ -66,6 +69,14 @@ Filesystem notifications, like cloud object-created events, can be repeated. The
 4. Commit the document, pages, and chunks in one database transaction.
 
 This prevents duplicate records without claiming distributed exactly-once delivery.
+
+## Durable Search Index
+
+`chunk_search` is an FTS5 external-content index backed by a view of chunks from current document versions. Chunk and document-version triggers maintain it inside the same transaction as the source change. A successful ingestion therefore cannot commit current chunks without also making them searchable.
+
+Existing databases receive a one-time backfill when schema version 1 is first initialized. Normal startup checks the existing index and does not rebuild it. `pharma-pipeline index-status` runs SQLite's FTS integrity check, while `rebuild-search-index` is reserved for recovery.
+
+Search joins through `documents` and requires `is_current = 1`. When a version is superseded, its immutable source rows remain auditable but its postings are removed from the active index so stale versions cannot affect results or BM25 scores. Duplicate file events are rejected by SHA-256 before chunk insertion and therefore do not grow the index.
 
 ## Intended Cloud Boundary
 

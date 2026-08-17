@@ -1,5 +1,5 @@
 {
-  "measured_at": "2026-08-17T19:44:54.373283+00:00",
+  "measured_at": "2026-08-17T21:07:19.550288+00:00",
   "corpus_directory": "data/corpus/raw",
   "corpus_files": 16,
   "corpus_bytes": 6159783,
@@ -16,19 +16,19 @@
     "chunks": 1987
   },
   "duration_seconds": {
-    "minimum": 1.2197,
-    "p50": 1.2475,
-    "p95": 1.2794,
-    "maximum": 1.2823
+    "minimum": 1.257,
+    "p50": 1.2635,
+    "p95": 1.3037,
+    "maximum": 1.3305
   },
   "pages_per_second": {
-    "at_p50_duration": 344.7,
-    "at_p95_duration": 336.09
+    "at_p50_duration": 340.32,
+    "at_p95_duration": 329.82
   },
   "run_results": [
     {
       "run": 1,
-      "duration_seconds": 1.2637,
+      "duration_seconds": 1.3305,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,
@@ -36,7 +36,7 @@
     },
     {
       "run": 2,
-      "duration_seconds": 1.2246,
+      "duration_seconds": 1.2617,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,
@@ -44,7 +44,7 @@
     },
     {
       "run": 3,
-      "duration_seconds": 1.2197,
+      "duration_seconds": 1.2653,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,
@@ -52,7 +52,7 @@
     },
     {
       "run": 4,
-      "duration_seconds": 1.2197,
+      "duration_seconds": 1.257,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,
@@ -60,7 +60,7 @@
     },
     {
       "run": 5,
-      "duration_seconds": 1.2759,
+      "duration_seconds": 1.2604,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,
@@ -68,7 +68,7 @@
     },
     {
       "run": 6,
-      "duration_seconds": 1.2823,
+      "duration_seconds": 1.2604,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,
@@ -76,7 +76,7 @@
     },
     {
       "run": 7,
-      "duration_seconds": 1.2495,
+      "duration_seconds": 1.2599,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,
@@ -84,7 +84,7 @@
     },
     {
       "run": 8,
-      "duration_seconds": 1.2454,
+      "duration_seconds": 1.2666,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,
@@ -92,7 +92,7 @@
     },
     {
       "run": 9,
-      "duration_seconds": 1.2207,
+      "duration_seconds": 1.271,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,
@@ -100,7 +100,7 @@
     },
     {
       "run": 10,
-      "duration_seconds": 1.2563,
+      "duration_seconds": 1.2684,
       "processed_files": 16,
       "failed_files": 0,
       "page_count": 430,
@@ -110,6 +110,7 @@
   "notes": [
     "Each run uses a fresh temporary SQLite database.",
     "The same local corpus files are reused, so operating-system file caches may be warm.",
-    "These timings measure ingestion only and do not include corpus download time."
+    "These timings include transactional FTS5 index updates during ingestion.",
+    "Corpus download time is excluded."
   ]
 }

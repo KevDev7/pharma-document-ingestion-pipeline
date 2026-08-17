@@ -1,8 +1,11 @@
 import sqlite3
+import time
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Iterable, Iterator, List, Optional
+
+from .search import build_fts_query
 
 
 def utc_now() -> str:
@@ -10,6 +13,8 @@ def utc_now() -> str:
 
 
 class PipelineDatabase:
+    SEARCH_INDEX_SCHEMA_VERSION = 2
+
     def __init__(self, path: Path) -> None:
         self.path = path
 
@@ -107,8 +112,233 @@ class PipelineDatabase:
                     occurred_at TEXT NOT NULL,
                     FOREIGN KEY (run_id) REFERENCES ingestion_runs(run_id)
                 );
+
+                CREATE TABLE IF NOT EXISTS search_index_state (
+                    singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
+                    schema_version INTEGER NOT NULL,
+                    initialized_at TEXT NOT NULL,
+                    initial_backfill_chunks INTEGER NOT NULL,
+                    initial_backfill_seconds REAL NOT NULL,
+                    last_rebuilt_at TEXT
+                );
                 """
             )
+            self._initialize_search_index(connection)
+
+    @staticmethod
+    def _create_search_triggers(connection: sqlite3.Connection) -> None:
+        connection.executescript(
+            """
+            CREATE TRIGGER IF NOT EXISTS chunks_search_insert
+            AFTER INSERT ON chunks
+            WHEN (SELECT is_current FROM documents WHERE document_id = new.document_id) = 1
+            BEGIN
+                INSERT INTO chunk_search(rowid, text) VALUES (new.rowid, new.text);
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS chunks_search_delete
+            AFTER DELETE ON chunks
+            WHEN (SELECT is_current FROM documents WHERE document_id = old.document_id) = 1
+            BEGIN
+                INSERT INTO chunk_search(chunk_search, rowid, text)
+                VALUES ('delete', old.rowid, old.text);
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS chunks_search_update
+            AFTER UPDATE OF text ON chunks
+            WHEN (SELECT is_current FROM documents WHERE document_id = new.document_id) = 1
+            BEGIN
+                INSERT INTO chunk_search(chunk_search, rowid, text)
+                VALUES ('delete', old.rowid, old.text);
+                INSERT INTO chunk_search(rowid, text) VALUES (new.rowid, new.text);
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS documents_search_deactivate
+            AFTER UPDATE OF is_current ON documents
+            WHEN old.is_current = 1 AND new.is_current = 0
+            BEGIN
+                INSERT INTO chunk_search(chunk_search, rowid, text)
+                SELECT 'delete', rowid, text
+                FROM chunks
+                WHERE document_id = old.document_id;
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS documents_search_activate
+            AFTER UPDATE OF is_current ON documents
+            WHEN old.is_current = 0 AND new.is_current = 1
+            BEGIN
+                INSERT INTO chunk_search(rowid, text)
+                SELECT rowid, text
+                FROM chunks
+                WHERE document_id = new.document_id;
+            END;
+            """
+        )
+
+    @staticmethod
+    def _drop_search_schema(connection: sqlite3.Connection) -> None:
+        connection.executescript(
+            """
+            DROP TRIGGER IF EXISTS chunks_search_insert;
+            DROP TRIGGER IF EXISTS chunks_search_delete;
+            DROP TRIGGER IF EXISTS chunks_search_update;
+            DROP TRIGGER IF EXISTS documents_search_deactivate;
+            DROP TRIGGER IF EXISTS documents_search_activate;
+            DROP TABLE IF EXISTS chunk_search;
+            DROP VIEW IF EXISTS search_current_chunks;
+            """
+        )
+
+    @staticmethod
+    def _create_search_table(connection: sqlite3.Connection) -> None:
+        connection.executescript(
+            """
+            CREATE VIEW IF NOT EXISTS search_current_chunks AS
+            SELECT c.rowid AS rowid, c.text AS text
+            FROM chunks c
+            JOIN documents d ON d.document_id = c.document_id
+            WHERE d.is_current = 1;
+
+            CREATE VIRTUAL TABLE chunk_search USING fts5(
+                text,
+                content = 'search_current_chunks',
+                content_rowid = 'rowid',
+                tokenize = 'porter unicode61'
+            );
+            """
+        )
+
+    def _initialize_search_index(self, connection: sqlite3.Connection) -> None:
+        exists = connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'chunk_search'"
+        ).fetchone()
+        state = connection.execute(
+            "SELECT * FROM search_index_state WHERE singleton = 1"
+        ).fetchone()
+        if exists and state and state["schema_version"] == self.SEARCH_INDEX_SCHEMA_VERSION:
+            self._create_search_triggers(connection)
+            return
+
+        started = time.perf_counter()
+        self._drop_search_schema(connection)
+        self._create_search_table(connection)
+        self._create_search_triggers(connection)
+        chunk_count = int(
+            connection.execute(
+                """
+                SELECT COUNT(*)
+                FROM chunks c
+                JOIN documents d ON d.document_id = c.document_id
+                WHERE d.is_current = 1
+                """
+            ).fetchone()[0]
+        )
+        connection.execute("INSERT INTO chunk_search(chunk_search) VALUES ('rebuild')")
+        elapsed = round(time.perf_counter() - started, 6)
+        connection.execute(
+            """
+            INSERT OR REPLACE INTO search_index_state (
+                singleton, schema_version, initialized_at,
+                initial_backfill_chunks, initial_backfill_seconds
+            ) VALUES (1, ?, ?, ?, ?)
+            """,
+            (self.SEARCH_INDEX_SCHEMA_VERSION, utc_now(), chunk_count, elapsed),
+        )
+
+    def rebuild_search_index(self) -> Dict[str, object]:
+        started = time.perf_counter()
+        with self.connect() as connection:
+            connection.execute("INSERT INTO chunk_search(chunk_search) VALUES ('rebuild')")
+            chunk_count = int(
+                connection.execute("SELECT COUNT(*) FROM search_current_chunks").fetchone()[0]
+            )
+            rebuilt_at = utc_now()
+            connection.execute(
+                """
+                UPDATE search_index_state
+                SET last_rebuilt_at = ?
+                WHERE singleton = 1
+                """,
+                (rebuilt_at,),
+            )
+        return {
+            "status": "rebuilt",
+            "indexed_chunks": chunk_count,
+            "duration_seconds": round(time.perf_counter() - started, 6),
+            "rebuilt_at": rebuilt_at,
+        }
+
+    def search_index_status(self) -> Dict[str, object]:
+        with self.connect() as connection:
+            connection.execute(
+                "INSERT INTO chunk_search(chunk_search, rank) VALUES ('integrity-check', 1)"
+            )
+            counts = connection.execute(
+                """
+                SELECT
+                    COALESCE(SUM(CASE WHEN d.is_current = 1 THEN 1 ELSE 0 END), 0)
+                        AS indexed_chunks,
+                    COALESCE(SUM(CASE WHEN d.is_current = 1 THEN 1 ELSE 0 END), 0)
+                        AS current_searchable_chunks,
+                    COUNT(*) AS total_stored_chunks
+                FROM chunks c
+                JOIN documents d ON d.document_id = c.document_id
+                """
+            ).fetchone()
+            state = connection.execute(
+                "SELECT * FROM search_index_state WHERE singleton = 1"
+            ).fetchone()
+        return {
+            "status": "healthy",
+            **dict(counts),
+            "schema_version": state["schema_version"],
+            "initialized_at": state["initialized_at"],
+            "initial_backfill_chunks": state["initial_backfill_chunks"],
+            "initial_backfill_seconds": state["initial_backfill_seconds"],
+            "last_rebuilt_at": state["last_rebuilt_at"],
+        }
+
+    def search_chunks(
+        self,
+        query: str,
+        top_k: int = 5,
+        document_type: Optional[str] = None,
+    ) -> List[Dict[str, object]]:
+        if top_k < 1:
+            raise ValueError("top_k must be at least 1")
+        match_query = build_fts_query(query)
+        if not match_query:
+            return []
+
+        type_clause = "AND c.document_type = ?" if document_type else ""
+        parameters: List[object] = [match_query]
+        if document_type:
+            parameters.append(document_type)
+        parameters.append(top_k)
+        with self.connect() as connection:
+            rows = connection.execute(
+                f"""
+                SELECT c.chunk_id, c.page_number, c.chunk_index, c.document_type,
+                       c.text, d.document_id, d.sha256 AS document_sha256,
+                       d.logical_name AS filename,
+                       -bm25(chunk_search, 1.0) AS score
+                FROM chunk_search
+                JOIN chunks c ON c.rowid = chunk_search.rowid
+                JOIN documents d ON d.document_id = c.document_id
+                WHERE chunk_search MATCH ? AND d.is_current = 1
+                    {type_clause}
+                ORDER BY score DESC, c.chunk_id
+                LIMIT ?
+                """,
+                tuple(parameters),
+            ).fetchall()
+        return [
+            {
+                **dict(row),
+                "score": round(float(row["score"]), 8),
+            }
+            for row in rows
+        ]
 
     def start_run(self, run_id: str, trigger_type: str, discovered_files: int) -> None:
         with self.connect() as connection:

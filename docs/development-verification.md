@@ -12,7 +12,7 @@ Command:
 .venv/bin/pytest
 ```
 
-Result: **29 tests passed**.
+Result: **36 tests passed**.
 
 The tests cover:
 
@@ -24,6 +24,7 @@ The tests cover:
 - Tesseract OCR fallback on a generated image-only PDF.
 - Corpus manifest validation, download receipts, frozen-hash enforcement, and repeatable benchmark counts.
 - Retrieval label validation, page-level scoring, duplicate-page collapse, chunking strategies, FTS5 BM25, reciprocal-rank fusion, manifest metadata, and vector cache behavior.
+- Durable-index migration/backfill, interrupted-migration recovery, transactional insert/update/delete behavior, duplicate stability, current-version indexing, restart persistence, metadata filtering, rollback, and recovery rebuild.
 
 ## Real PDF Ingestion
 
@@ -89,12 +90,27 @@ Ten runs each used a fresh temporary SQLite database and produced identical file
 
 | Measure | Result |
 | --- | ---: |
-| p50 duration | 1.2475 seconds |
-| p95 duration | 1.2794 seconds |
-| Pages/second at p50 duration | 344.70 |
-| Pages/second at p95 duration | 336.09 |
+| p50 duration | 1.2635 seconds |
+| p95 duration | 1.3037 seconds |
+| Pages/second at p50 duration | 340.32 |
+| Pages/second at p95 duration | 329.82 |
 
-These local timings exclude download time and reuse the same files, so operating-system caches may be warm. They are a reproducible development benchmark, not a production capacity claim. Raw run data and environment details are saved in [`docs/benchmarks/corpus-ingestion-2026-08-17.json`](benchmarks/corpus-ingestion-2026-08-17.json).
+These local timings include transactional FTS5 updates, exclude download time, and reuse the same files, so operating-system caches may be warm. They are a reproducible development benchmark, not a production capacity claim. Raw run data and environment details are saved in [`docs/benchmarks/corpus-ingestion-2026-08-17.json`](benchmarks/corpus-ingestion-2026-08-17.json).
+
+## Durable Search Index
+
+The existing local database was migrated once, backfilling 2,037 current chunks in 0.0290 seconds. A second process reported the same initialization timestamp, confirming that normal startup did not rebuild the index. SQLite's FTS integrity check passed.
+
+Two untouched FDA test questions were run through the durable CLI index. The expected process-validation page 14 and aseptic-processing page 38 ranked first, matching their committed evaluation labels.
+
+Ten temporary-database runs compared a 77-chunk transaction from the median-sized current document with rebuilding all 2,037 stored chunks:
+
+| Index operation | Chunks touched | p50 | p95 |
+| --- | ---: | ---: | ---: |
+| Incremental chunk batch | 77 | 0.0124 seconds | 0.0127 seconds |
+| Full recovery rebuild | 2,037 | 0.0136 seconds | 0.0142 seconds |
+
+At this scale, transaction overhead dominates and the wall-clock difference is negligible. The result supports incremental work isolation and transactional correctness, not a speedup claim. Raw measurements are saved in [`docs/benchmarks/search-index-2026-08-17.json`](benchmarks/search-index-2026-08-17.json).
 
 ## Labeled Retrieval Evaluation
 

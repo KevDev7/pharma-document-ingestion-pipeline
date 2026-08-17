@@ -1,5 +1,6 @@
 import argparse
 import json
+import time
 from pathlib import Path
 from typing import Optional, Sequence
 
@@ -8,6 +9,7 @@ from .config import DEFAULT_ROOT, Settings
 from .corpus import download_manifest, summarize_corpus
 from .experiments import run_retrieval_experiment
 from .pipeline import IngestionPipeline
+from .search_benchmark import benchmark_search_index
 from .watcher import watch_directory
 
 
@@ -32,6 +34,27 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("scan", help="Process and archive PDFs currently in data/incoming")
     subparsers.add_parser("watch", help="Watch data/incoming and process new PDFs")
     subparsers.add_parser("status", help="Print persisted pipeline counts")
+
+    search = subparsers.add_parser(
+        "search", help="Search current document chunks in the durable BM25 index"
+    )
+    search.add_argument("query")
+    search.add_argument("--top-k", type=int, default=5)
+    search.add_argument("--document-type", default=None)
+
+    subparsers.add_parser(
+        "index-status", help="Check the durable search index and print its counts"
+    )
+    subparsers.add_parser(
+        "rebuild-search-index", help="Rebuild the durable search index for recovery"
+    )
+
+    search_benchmark = subparsers.add_parser(
+        "benchmark-search-index",
+        help="Compare one-document incremental indexing with a full index rebuild",
+    )
+    search_benchmark.add_argument("--runs", type=int, default=10)
+    search_benchmark.add_argument("--output", type=Path, default=None)
 
     download = subparsers.add_parser(
         "download-corpus", help="Download PDFs declared in a provenance manifest"
@@ -88,7 +111,34 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         watch_directory(pipeline)
         return
     elif args.command == "status":
-        output = pipeline.database.summary()
+        output = {
+            **pipeline.database.summary(),
+            "search_index": pipeline.database.search_index_status(),
+        }
+    elif args.command == "search":
+        started = time.perf_counter()
+        results = pipeline.database.search_chunks(
+            args.query,
+            top_k=args.top_k,
+            document_type=args.document_type,
+        )
+        output = {
+            "query": args.query,
+            "top_k": args.top_k,
+            "document_type": args.document_type,
+            "result_count": len(results),
+            "latency_ms": round((time.perf_counter() - started) * 1000, 4),
+            "results": results,
+        }
+    elif args.command == "index-status":
+        output = pipeline.database.search_index_status()
+    elif args.command == "rebuild-search-index":
+        output = pipeline.database.rebuild_search_index()
+    elif args.command == "benchmark-search-index":
+        output = benchmark_search_index(settings.database_path, runs=args.runs)
+        if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(json.dumps(output, indent=2) + "\n", encoding="utf-8")
     elif args.command == "download-corpus":
         manifest_path = args.manifest or settings.root / "corpus" / "manifest.json"
         output = download_manifest(

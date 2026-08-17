@@ -1,0 +1,96 @@
+{
+  "measured_at": "2026-08-17T21:06:59.820719+00:00",
+  "runs": 10,
+  "environment": {
+    "platform": "macOS-26.5.2-arm64-arm-64bit",
+    "python": "3.9.6",
+    "sqlite": "3.51.0"
+  },
+  "source_index_chunks": 2037,
+  "source_index_status": {
+    "status": "healthy",
+    "indexed_chunks": 2037,
+    "current_searchable_chunks": 2037,
+    "total_stored_chunks": 2037,
+    "schema_version": 2,
+    "initialized_at": "2026-08-17T21:06:59.282802+00:00",
+    "initial_backfill_chunks": 2037,
+    "initial_backfill_seconds": 0.029035,
+    "last_rebuilt_at": null
+  },
+  "representative_document": {
+    "filename": "fda-guidance-data-integrity-cgmp.pdf",
+    "incremental_chunks": 77
+  },
+  "incremental_update_seconds": {
+    "minimum": 0.01159,
+    "p50": 0.012422,
+    "p95": 0.012749,
+    "maximum": 0.012776
+  },
+  "full_rebuild_seconds": {
+    "minimum": 0.013131,
+    "p50": 0.013589,
+    "p95": 0.014165,
+    "maximum": 0.014361
+  },
+  "p50_full_rebuild_over_incremental_ratio": 1.09,
+  "run_results": [
+    {
+      "run": 1,
+      "incremental_seconds": 0.012717,
+      "full_rebuild_seconds": 0.013825
+    },
+    {
+      "run": 2,
+      "incremental_seconds": 0.012776,
+      "full_rebuild_seconds": 0.013926
+    },
+    {
+      "run": 3,
+      "incremental_seconds": 0.01159,
+      "full_rebuild_seconds": 0.013131
+    },
+    {
+      "run": 4,
+      "incremental_seconds": 0.012141,
+      "full_rebuild_seconds": 0.013338
+    },
+    {
+      "run": 5,
+      "incremental_seconds": 0.012541,
+      "full_rebuild_seconds": 0.013877
+    },
+    {
+      "run": 6,
+      "incremental_seconds": 0.01186,
+      "full_rebuild_seconds": 0.013433
+    },
+    {
+      "run": 7,
+      "incremental_seconds": 0.012465,
+      "full_rebuild_seconds": 0.013421
+    },
+    {
+      "run": 8,
+      "incremental_seconds": 0.012257,
+      "full_rebuild_seconds": 0.014361
+    },
+    {
+      "run": 9,
+      "incremental_seconds": 0.01238,
+      "full_rebuild_seconds": 0.013331
+    },
+    {
+      "run": 10,
+      "incremental_seconds": 0.012663,
+      "full_rebuild_seconds": 0.013745
+    }
+  ],
+  "notes": [
+    "Each measurement uses a temporary SQLite backup of the same source database.",
+    "Incremental timing covers one transaction that inserts a representative chunk batch and its FTS5 trigger updates.",
+    "Full rebuild timing reindexes every current chunk and is a recovery operation, not the normal ingestion path.",
+    "PDF extraction and chunk generation are excluded from both measurements."
+  ]
+}

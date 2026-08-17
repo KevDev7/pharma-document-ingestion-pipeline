@@ -100,6 +100,7 @@ def benchmark_corpus(corpus_dir: Path, runs: int = 10) -> Dict[str, object]:
         "notes": [
             "Each run uses a fresh temporary SQLite database.",
             "The same local corpus files are reused, so operating-system file caches may be warm.",
-            "These timings measure ingestion only and do not include corpus download time.",
+            "These timings include transactional FTS5 index updates during ingestion.",
+            "Corpus download time is excluded.",
         ],
     }

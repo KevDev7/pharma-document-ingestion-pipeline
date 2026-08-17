@@ -63,3 +63,11 @@
 **Reason:** Full-page BGE-small hybrid retrieval ranked first in development and looked better on the audited validation split, but the gain did not generalize. On 16 acceptance questions, BM25 achieved 100.00% Recall@5 and 95.00% MRR versus 93.75% and 87.50% for the hybrid candidate, so BM25 was locked before final testing.
 
 **Trade-off:** BM25 does not capture semantic similarity as directly as an embedding model. On the untouched test, it achieved 100.00% Recall@5 versus 87.50% for hybrid and had 1.17 ms p95 retrieval latency versus 11.74 ms. The perfect Recall@5 result is based on only 16 test questions and must not be generalized.
+
+## 009: Maintain BM25 transactionally in SQLite
+
+**Decision:** Store the selected BM25 index as an FTS5 external-content table maintained by triggers on the existing `chunks` table.
+
+**Reason:** The corpus and ingestion state already live in one single-worker SQLite database. Transactional triggers make new chunks searchable immediately, prevent a separate indexing job from falling behind, and keep every result linked to its document version and page.
+
+**Trade-off:** Superseded chunks remain in source tables for audit but are removed from the active index, adding document-version trigger logic to prevent stale versions from affecting BM25 scores. At this small corpus size, full rebuilds and incremental chunk batches take roughly the same wall-clock time, so this milestone proves bounded updates and consistency rather than a meaningful latency win. PostgreSQL or a managed search system is not justified until concurrency or corpus size changes substantially.

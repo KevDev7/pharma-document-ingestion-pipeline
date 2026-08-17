@@ -1,7 +1,6 @@
 import json
 import hashlib
 import importlib.metadata
-import re
 import sqlite3
 import time
 from dataclasses import dataclass
@@ -9,44 +8,8 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Protocol, Sequence
 
 from .evaluation import RetrievalResult
+from .search import build_fts_query
 from .text import clean_text, split_text
-
-
-STOP_WORDS = {
-    "a",
-    "an",
-    "and",
-    "are",
-    "as",
-    "at",
-    "be",
-    "by",
-    "did",
-    "do",
-    "does",
-    "for",
-    "from",
-    "how",
-    "in",
-    "is",
-    "it",
-    "of",
-    "on",
-    "or",
-    "that",
-    "the",
-    "this",
-    "to",
-    "was",
-    "were",
-    "what",
-    "when",
-    "where",
-    "which",
-    "who",
-    "why",
-    "with",
-}
 
 
 @dataclass(frozen=True)
@@ -253,16 +216,6 @@ def build_chunks(
     return chunks
 
 
-def _fts_query(query: str) -> str:
-    terms = [
-        token.lower()
-        for token in re.findall(r"[A-Za-z0-9]+", query)
-        if len(token) > 1 and token.lower() not in STOP_WORDS
-    ]
-    unique_terms = list(dict.fromkeys(terms))
-    return " OR ".join(f'"{term}"' for term in unique_terms)
-
-
 class KeywordRetriever:
     name = "sqlite_fts5_bm25"
 
@@ -304,7 +257,7 @@ class KeywordRetriever:
     def retrieve(self, query: str, top_k: int) -> Sequence[RetrievalResult]:
         if top_k < 1:
             raise ValueError("top_k must be at least 1")
-        match_query = _fts_query(query)
+        match_query = build_fts_query(query)
         if not match_query:
             return []
         rows = self.connection.execute(
