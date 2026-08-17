@@ -6,6 +6,7 @@ from typing import Optional, Sequence
 from .benchmark import benchmark_corpus
 from .config import DEFAULT_ROOT, Settings
 from .corpus import download_manifest, summarize_corpus
+from .experiments import run_retrieval_experiment
 from .pipeline import IngestionPipeline
 from .watcher import watch_directory
 
@@ -52,6 +53,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     benchmark.add_argument("--runs", type=int, default=10)
     benchmark.add_argument("--output", type=Path, default=None)
+
+    retrieval = subparsers.add_parser(
+        "evaluate-retrieval",
+        help="Compare chunking, embedding, and retrieval configurations",
+    )
+    retrieval.add_argument(
+        "--queries", type=Path, default=None, help="Defaults to evaluation/queries.jsonl"
+    )
+    retrieval.add_argument(
+        "--config", type=Path, default=None, help="Defaults to evaluation/config.json"
+    )
+    retrieval.add_argument("--output", type=Path, required=True)
     return parser
 
 
@@ -96,6 +109,27 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         if args.output:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(json.dumps(output, indent=2) + "\n", encoding="utf-8")
+    elif args.command == "evaluate-retrieval":
+        report = run_retrieval_experiment(
+            database_path=settings.database_path,
+            manifest_path=settings.root / "corpus" / "manifest.json",
+            query_path=args.queries or settings.root / "evaluation" / "queries.jsonl",
+            config_path=args.config or settings.root / "evaluation" / "config.json",
+            cache_dir=settings.state_dir / "retrieval",
+        )
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+        output = {
+            "status": "completed",
+            "artifact": str(args.output),
+            "development_candidate_configuration": report[
+                "development_candidate_configuration"
+            ],
+            "recommended_configuration": report["recommended_configuration"],
+            "test_candidate_recall_at_5_delta": report[
+                "test_candidate_recall_at_5_delta"
+            ],
+        }
     else:
         raise ValueError(f"Unsupported command: {args.command}")
 

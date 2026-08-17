@@ -17,6 +17,12 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<9"]
+retrieval = [
+    "numpy==2.0.2",
+    "sentence-transformers==5.1.2",
+    "torch==2.8.0",
+    "transformers==4.57.6",
+]
 
 [project.scripts]
 pharma-pipeline = "pharma_pipeline.cli:main"

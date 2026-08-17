@@ -8,8 +8,10 @@ This file prevents unsupported resume claims. A claim moves to **verified** only
 | Skipped duplicate and unchanged PDFs | Duplicate-ingestion test plus corpus replay | Verified: all 16 corpus files skipped on replay |
 | Incrementally handled updated PDFs | Version test showing `supersedes_document_id` and one current version | Implemented and tested |
 | Used OCR fallback for scanned files | OCR test plus corpus OCR-page count | Verified: generated image-only test and 1 routed corpus page; OCR accuracy not measured |
-| Improved retrieval Recall@5 from A to B | Labeled query set and committed evaluation output | Not built |
-| Reduced p95 query latency by C percent | Repeated benchmark with saved raw timings | Not built |
+| Evaluated 21 retrieval configurations on 80 labeled questions | Committed development/validation/acceptance/test labels and raw experiment artifact | Verified locally |
+| Retained BM25 after hybrid retrieval underperformed on acceptance data | Separate 16-question acceptance split used before the final test | Verified locally: 100.00% versus 93.75% Recall@5 |
+| Confirmed the locked choice on untouched test data | Final 16-question test split created without retrieval-output inspection | Verified locally: BM25 100.00% versus hybrid 87.50% Recall@5; do not generalize perfect recall |
+| Measured p95 retrieval latency across repeated interleaved trials | 80 raw timing samples per retriever | Verified locally: BM25 1.17 ms; hybrid candidate 11.74 ms |
 | Ran on S3/SQS | Deployed infrastructure and captured run evidence | Not built; do not claim |
 
 ## Intended Interview Stories
@@ -30,8 +32,12 @@ Digital pages use embedded text because it is faster and generally more accurate
 
 One corrupt PDF produces an error record and moves to quarantine. Other files in the same run continue processing.
 
+### Retrieval design
+
+The project compared 21 configurations using separate development, validation, acceptance, and untouched test questions. BGE-small hybrid retrieval looked stronger during development but lost to boundary-aware BM25 on acceptance Recall@5 and MRR. The simpler BM25 path was locked before final testing. On the untouched test, BM25 reached 100% Recall@5 versus 87.5% for hybrid and was about 10 times faster at p95. The largest tested index was only 2,068 chunks, so exact local vector search was more explainable than adding an approximate vector database.
+
 ## Draft Resume Shape
 
 1. Built an event-driven pipeline that processed **16 FDA PDFs / 430 pages** into **1,987 page-linked chunks**, using content hashes to skip duplicate files.
 2. Added OCR fallback, document versioning, failure quarantine, and page-level lineage for incremental PDF ingestion.
-3. Improved **Recall@5 from A to B** while keeping **p95 retrieval latency below C ms** by evaluating chunking and retrieval strategies.
+3. Evaluated **21 retrieval configurations on 80 labeled questions** and retained BM25 after acceptance testing; it later beat the hybrid candidate by **12.5 Recall@5 points** on untouched test data.

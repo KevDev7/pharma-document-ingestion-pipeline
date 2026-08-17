@@ -16,6 +16,7 @@ This repository intentionally separates ingestion from the future retrieval appl
 - Includes automated tests for ingestion, duplicate handling, version replacement, and OCR fallback.
 - Reconstructs a hash-frozen FDA corpus from a versioned provenance manifest.
 - Benchmarks repeated ingestion with a fresh SQLite database for each run.
+- Evaluates 21 chunking, embedding, and retrieval configurations on 80 labeled questions.
 
 ## Quick Start
 
@@ -52,6 +53,18 @@ pharma-pipeline benchmark-corpus --runs 10 --output docs/benchmarks/corpus-inges
 
 The current core corpus contains 16 FDA-authored pharmaceutical quality documents totaling 430 pages. The verified ingestion run produced 1,987 page-linked chunks, and a duplicate replay skipped all 16 files by content hash. See [corpus/README.md](corpus/README.md) for provenance and [the saved benchmark](docs/benchmarks/corpus-ingestion-2026-08-17.json) for full measurements and limitations.
 
+## Retrieval Evaluation
+
+Install the optional retrieval dependencies and run the committed evaluation set:
+
+```bash
+pip install -e '.[retrieval,dev]'
+pharma-pipeline evaluate-retrieval \
+  --output docs/benchmarks/retrieval-evaluation-2026-08-17.json
+```
+
+The experiment compares page, fixed-window, and boundary-aware chunks; MiniLM, BGE-small, and E5-small embeddings; and keyword, vector, and hybrid retrieval. A 16-question acceptance split retained boundary-aware BM25 before the final test was run. On 16 untouched test questions, BM25 achieved 100% Recall@5 versus 87.5% for the hybrid development candidate, with 1.17 ms versus 11.74 ms p95 retrieval latency. BM25 remains the recommended local design. See [docs/retrieval-evaluation.md](docs/retrieval-evaluation.md) for methodology and limitations.
+
 ## Data Model
 
 The SQLite database at `data/state/pipeline.db` contains:
@@ -66,4 +79,4 @@ See [docs/architecture.md](docs/architecture.md) for the system boundary and [do
 
 ## Current Scope
 
-This milestone does not use Docker, Airflow, a vector database, or cloud services. Those tools are not needed to prove the ingestion contract. The next milestone is a labeled retrieval evaluation; cloud object events come later only if the local measurements justify the migration.
+This milestone does not use Docker, Airflow, a managed vector database, or cloud services. Exact local vector search is sufficient for the current 2,068-chunk maximum experiment. The next milestone is durable incremental retrieval indexing; cloud object events come later only if local measurements justify the migration.

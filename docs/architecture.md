@@ -26,6 +26,24 @@ SQLite documents/pages/chunks/run metrics
 
 The benchmark path uses the same processing boundary but reads hash-frozen files reconstructed from `corpus/manifest.json`. Benchmark runs write to fresh temporary SQLite databases so prior ingestion state cannot turn a measured run into a duplicate replay.
 
+## Retrieval Evaluation Flow
+
+```text
+current corpus pages in SQLite + manifest metadata
+        |
+        v
+page / fixed-window / boundary-aware chunks
+        |
+        +--> SQLite FTS5 BM25 keyword retrieval
+        +--> normalized sentence-transformer embeddings + exact cosine search
+        +--> reciprocal-rank-fusion hybrid retrieval
+        |
+        v
+page-level Recall@K / Precision@K / MRR / p50-p95 latency
+```
+
+Embedding arrays are cached locally using a fingerprint of the resolved model revision, adapter behavior, Sentence Transformers, Torch, and Transformers versions, chunk IDs, and text hashes. Long embedding inputs are split to the model token limit, then mean-pooled and normalized. Evaluation labels use immutable document hashes plus page numbers, and retrieval refuses database records that do not match the frozen corpus manifest or expected page range. The current experiment performs exact vector search because the largest tested index contains 2,068 chunks.
+
 ## Data Contract
 
 Each stored chunk has:
@@ -51,4 +69,4 @@ This prevents duplicate records without claiming distributed exactly-once delive
 
 ## Intended Cloud Boundary
 
-The eventual cloud version can replace the watched folder with an S3 object-created event and SQS message. The `IngestionPipeline.ingest_paths()` processing boundary remains the same. That migration is deliberately outside the first milestone.
+The eventual cloud version can replace the watched folder with an S3 object-created event and SQS message. The `IngestionPipeline.ingest_paths()` processing boundary remains the same. That migration remains deferred until durable incremental retrieval is measured locally.

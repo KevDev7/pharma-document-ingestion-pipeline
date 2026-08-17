@@ -2,7 +2,7 @@
 
 Date: August 17, 2026
 
-These results verify the first ingestion milestone. Retrieval quality is not measured here; that requires a labeled query set.
+These results verify the ingestion milestone and the first labeled retrieval comparison.
 
 ## Automated Tests
 
@@ -12,7 +12,7 @@ Command:
 .venv/bin/pytest
 ```
 
-Result: **17 tests passed**.
+Result: **29 tests passed**.
 
 The tests cover:
 
@@ -23,6 +23,7 @@ The tests cover:
 - A corrupt PDF being recorded and moved to quarantine.
 - Tesseract OCR fallback on a generated image-only PDF.
 - Corpus manifest validation, download receipts, frozen-hash enforcement, and repeatable benchmark counts.
+- Retrieval label validation, page-level scoring, duplicate-page collapse, chunking strategies, FTS5 BM25, reciprocal-rank fusion, manifest metadata, and vector cache behavior.
 
 ## Real PDF Ingestion
 
@@ -94,3 +95,20 @@ Ten runs each used a fresh temporary SQLite database and produced identical file
 | Pages/second at p95 duration | 336.09 |
 
 These local timings exclude download time and reuse the same files, so operating-system caches may be warm. They are a reproducible development benchmark, not a production capacity claim. Raw run data and environment details are saved in [`docs/benchmarks/corpus-ingestion-2026-08-17.json`](benchmarks/corpus-ingestion-2026-08-17.json).
+
+## Labeled Retrieval Evaluation
+
+The evaluation uses 80 questions across all 16 FDA documents: 32 development questions, 16 validation questions, 16 acceptance questions, and 16 untouched test questions. The labels cover 80 unique source pages, and the largest tested chunk set contains 2,068 records.
+
+Acceptance and test questions each target one relevant page. Multi-page cases appear only in development and audited validation, so the held-out result is limited to single-page retrieval.
+
+Development scoring compared 21 combinations of chunking strategy, embedding model, and retrieval method. It nominated full-page chunks with BGE-small hybrid retrieval, but the acceptance split selected boundary-aware BM25 before the final test was run.
+
+| Untouched test metric at K=5 | BM25 baseline | Hybrid candidate | Candidate difference |
+| --- | ---: | ---: | ---: |
+| Recall@5 | 100.00% | 87.50% | -12.50 points |
+| Precision@5 | 20.00% | 17.50% | -2.50 points |
+| MRR | 96.88% | 73.96% | -22.92 points |
+| p95 retrieval latency | 1.17 ms | 11.74 ms | +10.57 ms |
+
+Input hashes, environment versions, raw rankings, and results at K=1/3/5/10 are saved in [`docs/benchmarks/retrieval-evaluation-2026-08-17.json`](benchmarks/retrieval-evaluation-2026-08-17.json). See [`docs/retrieval-evaluation.md`](retrieval-evaluation.md) for the method and limitations.
