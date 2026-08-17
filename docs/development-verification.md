@@ -2,7 +2,7 @@
 
 Date: August 17, 2026
 
-These results verify the first milestone. They are not a retrieval benchmark and should not be used as final resume scale claims.
+These results verify the first ingestion milestone. Retrieval quality is not measured here; that requires a labeled query set.
 
 ## Automated Tests
 
@@ -12,7 +12,7 @@ Command:
 .venv/bin/pytest
 ```
 
-Result: **11 tests passed** in 3.14 seconds.
+Result: **17 tests passed**.
 
 The tests cover:
 
@@ -22,6 +22,7 @@ The tests cover:
 - A changed file superseding the prior document version.
 - A corrupt PDF being recorded and moved to quarantine.
 - Tesseract OCR fallback on a generated image-only PDF.
+- Corpus manifest validation, download receipts, frozen-hash enforcement, and repeatable benchmark counts.
 
 ## Real PDF Ingestion
 
@@ -50,7 +51,7 @@ With `pharma-pipeline watch` running, `pharmaceutical-sdf-page3-certificate-qual
 
 The watcher detected the completed copy, processed one page into three chunks, recorded the trigger as `file_created_event`, and moved the PDF into `data/archive/`.
 
-## Current Local State
+## Pre-Corpus Local State
 
 - Document versions: 3
 - Current documents: 3
@@ -59,4 +60,37 @@ The watcher detected the completed copy, processed one page into three chunks, r
 - Source bytes: 113,069
 - Recorded errors: 0
 
-These counts intentionally remain modest. A larger, licensed benchmark corpus and labeled retrieval questions are required before producing final scale, quality, or latency claims.
+These early counts intentionally remained modest. The core corpus below supplies reproducible ingestion scale; a labeled query set is still required before making retrieval-quality claims.
+
+## FDA Core Corpus
+
+The versioned manifest reconstructed 16 FDA-authored pharmaceutical quality PDFs. All 16 downloads passed PDF validation and matched their expected page counts and SHA-256 hashes.
+
+| Measure | Result |
+| --- | ---: |
+| PDFs | 16 |
+| Source pages | 430 |
+| Source bytes | 6,159,783 |
+| Stored chunks | 1,987 |
+| Digital extraction pages | 429 |
+| OCR-routed pages | 1 |
+| Failed files | 0 |
+
+The OCR-routed page had almost no embedded text. This confirms the routing path was used; it does not measure OCR transcription accuracy.
+
+The immediate duplicate replay discovered the same 16 files, processed none, skipped all 16 by SHA-256, and completed in 0.0208 seconds.
+
+After the corpus run, the local control database contains 19 document versions, 451 pages, and 2,037 chunks when combined with the earlier development files. Resume scale claims use the isolated 16-document corpus counts above, not this mixed total.
+
+## Repeated Ingestion Timing
+
+Ten runs each used a fresh temporary SQLite database and produced identical file, page, and chunk counts.
+
+| Measure | Result |
+| --- | ---: |
+| p50 duration | 1.2475 seconds |
+| p95 duration | 1.2794 seconds |
+| Pages/second at p50 duration | 344.70 |
+| Pages/second at p95 duration | 336.09 |
+
+These local timings exclude download time and reuse the same files, so operating-system caches may be warm. They are a reproducible development benchmark, not a production capacity claim. Raw run data and environment details are saved in [`docs/benchmarks/corpus-ingestion-2026-08-17.json`](benchmarks/corpus-ingestion-2026-08-17.json).

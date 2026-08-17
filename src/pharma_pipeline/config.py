@@ -8,6 +8,8 @@ class Settings:
     incoming_dir: Path
     archive_dir: Path
     quarantine_dir: Path
+    corpus_raw_dir: Path
+    corpus_scanned_dir: Path
     state_dir: Path
     database_path: Path
     chunk_size: int = 700
@@ -25,6 +27,8 @@ class Settings:
             incoming_dir=resolved / "data" / "incoming",
             archive_dir=resolved / "data" / "archive",
             quarantine_dir=resolved / "data" / "quarantine",
+            corpus_raw_dir=resolved / "data" / "corpus" / "raw",
+            corpus_scanned_dir=resolved / "data" / "corpus" / "scanned",
             state_dir=state_dir,
             database_path=state_dir / "pipeline.db",
         )
@@ -34,6 +38,8 @@ class Settings:
             self.incoming_dir,
             self.archive_dir,
             self.quarantine_dir,
+            self.corpus_raw_dir,
+            self.corpus_scanned_dir,
             self.state_dir,
         ):
             path.mkdir(parents=True, exist_ok=True)

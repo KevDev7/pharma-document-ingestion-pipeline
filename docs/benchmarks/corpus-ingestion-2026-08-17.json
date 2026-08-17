@@ -1,0 +1,115 @@
+{
+  "measured_at": "2026-08-17T19:44:54.373283+00:00",
+  "corpus_directory": "data/corpus/raw",
+  "corpus_files": 16,
+  "corpus_bytes": 6159783,
+  "runs": 10,
+  "environment": {
+    "platform": "macOS-26.5.2-arm64-arm-64bit",
+    "python": "3.9.6",
+    "pymupdf": "1.26.5"
+  },
+  "counts_per_run": {
+    "processed_files": 16,
+    "failed_files": 0,
+    "pages": 430,
+    "chunks": 1987
+  },
+  "duration_seconds": {
+    "minimum": 1.2197,
+    "p50": 1.2475,
+    "p95": 1.2794,
+    "maximum": 1.2823
+  },
+  "pages_per_second": {
+    "at_p50_duration": 344.7,
+    "at_p95_duration": 336.09
+  },
+  "run_results": [
+    {
+      "run": 1,
+      "duration_seconds": 1.2637,
+      "processed_files": 16,
+      "failed_files": 0,
+      "page_count": 430,
+      "chunk_count": 1987
+    },
+    {
+      "run": 2,
+      "duration_seconds": 1.2246,
+      "processed_files": 16,
+      "failed_files": 0,
+      "page_count": 430,
+      "chunk_count": 1987
+    },
+    {
+      "run": 3,
+      "duration_seconds": 1.2197,
+      "processed_files": 16,
+      "failed_files": 0,
+      "page_count": 430,
+      "chunk_count": 1987
+    },
+    {
+      "run": 4,
+      "duration_seconds": 1.2197,
+      "processed_files": 16,
+      "failed_files": 0,
+      "page_count": 430,
+      "chunk_count": 1987
+    },
+    {
+      "run": 5,
+      "duration_seconds": 1.2759,
+      "processed_files": 16,
+      "failed_files": 0,
+      "page_count": 430,
+      "chunk_count": 1987
+    },
+    {
+      "run": 6,
+      "duration_seconds": 1.2823,
+      "processed_files": 16,
+      "failed_files": 0,
+      "page_count": 430,
+      "chunk_count": 1987
+    },
+    {
+      "run": 7,
+      "duration_seconds": 1.2495,
+      "processed_files": 16,
+      "failed_files": 0,
+      "page_count": 430,
+      "chunk_count": 1987
+    },
+    {
+      "run": 8,
+      "duration_seconds": 1.2454,
+      "processed_files": 16,
+      "failed_files": 0,
+      "page_count": 430,
+      "chunk_count": 1987
+    },
+    {
+      "run": 9,
+      "duration_seconds": 1.2207,
+      "processed_files": 16,
+      "failed_files": 0,
+      "page_count": 430,
+      "chunk_count": 1987
+    },
+    {
+      "run": 10,
+      "duration_seconds": 1.2563,
+      "processed_files": 16,
+      "failed_files": 0,
+      "page_count": 430,
+      "chunk_count": 1987
+    }
+  ],
+  "notes": [
+    "Each run uses a fresh temporary SQLite database.",
+    "The same local corpus files are reused, so operating-system file caches may be warm.",
+    "These timings measure ingestion only and do not include corpus download time."
+  ]
+}

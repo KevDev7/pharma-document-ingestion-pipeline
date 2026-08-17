@@ -31,3 +31,11 @@
 **Reason:** Digital extraction is faster and avoids OCR transcription errors. OCR remains available for image-only scans.
 
 **Trade-off:** Character count is a simple routing signal and may miss pages containing substantial but corrupted embedded text. A later experiment will compare richer quality checks.
+
+## 005: Manifest-driven FDA corpus
+
+**Decision:** Build the first benchmark from 16 FDA-authored final guidances and compliance-program PDFs, commit their provenance and expected hashes, and keep downloaded files out of Git.
+
+**Reason:** The corpus is relevant to pharmaceutical document processing, can be reconstructed from official sources, and has a clearer reuse basis than sponsor-authored labels or submissions. Frozen hashes make source changes visible instead of silently changing benchmark inputs.
+
+**Trade-off:** The 430-page core is mostly born-digital and is useful for ingestion and retrieval evaluation, but not broad enough for OCR accuracy claims. Historical scanned FDA material will be evaluated as a separate, explicitly labeled stress corpus.

@@ -24,6 +24,8 @@ SQLite documents/pages/chunks/run metrics
         +--> data/quarantine/   failed PDFs
 ```
 
+The benchmark path uses the same processing boundary but reads hash-frozen files reconstructed from `corpus/manifest.json`. Benchmark runs write to fresh temporary SQLite databases so prior ingestion state cannot turn a measured run into a duplicate replay.
+
 ## Data Contract
 
 Each stored chunk has:

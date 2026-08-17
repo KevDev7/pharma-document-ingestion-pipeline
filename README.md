@@ -14,6 +14,8 @@ This repository intentionally separates ingestion from the future retrieval appl
 - Tracks processing runs, failures, superseded file versions, page counts, and OCR usage.
 - Archives successfully processed files and quarantines failures.
 - Includes automated tests for ingestion, duplicate handling, version replacement, and OCR fallback.
+- Reconstructs a hash-frozen FDA corpus from a versioned provenance manifest.
+- Benchmarks repeated ingestion with a fresh SQLite database for each run.
 
 ## Quick Start
 
@@ -37,6 +39,19 @@ pharma-pipeline ingest /path/to/document.pdf
 pharma-pipeline status
 ```
 
+## Reproducible Corpus
+
+The repository commits source metadata and expected SHA-256 hashes, not the source PDFs. Rebuild and inspect the corpus with:
+
+```bash
+pharma-pipeline download-corpus
+pharma-pipeline corpus-status
+pharma-pipeline ingest-corpus
+pharma-pipeline benchmark-corpus --runs 10 --output docs/benchmarks/corpus-ingestion.json
+```
+
+The current core corpus contains 16 FDA-authored pharmaceutical quality documents totaling 430 pages. The verified ingestion run produced 1,987 page-linked chunks, and a duplicate replay skipped all 16 files by content hash. See [corpus/README.md](corpus/README.md) for provenance and [the saved benchmark](docs/benchmarks/corpus-ingestion-2026-08-17.json) for full measurements and limitations.
+
 ## Data Model
 
 The SQLite database at `data/state/pipeline.db` contains:
@@ -47,8 +62,8 @@ The SQLite database at `data/state/pipeline.db` contains:
 - `chunks`: deterministic chunk IDs and page-level source lineage.
 - `ingestion_errors`: files that failed with their error messages.
 
-See [docs/architecture.md](docs/architecture.md) for the system boundary and [docs/resume-evidence.md](docs/resume-evidence.md) for the metrics that must be measured before making portfolio claims.
+See [docs/architecture.md](docs/architecture.md) for the system boundary and [docs/resume-evidence.md](docs/resume-evidence.md) for the claim ledger.
 
 ## Current Scope
 
-This milestone does not use Docker, Airflow, a vector database, or cloud services. Those tools are not needed to prove the ingestion contract. The next milestone will evaluate retrieval storage and replace the local directory event with a cloud object-created event only after the local workflow is reliable.
+This milestone does not use Docker, Airflow, a vector database, or cloud services. Those tools are not needed to prove the ingestion contract. The next milestone is a labeled retrieval evaluation; cloud object events come later only if the local measurements justify the migration.

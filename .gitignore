@@ -9,10 +9,14 @@ data/incoming/*
 data/archive/*
 data/quarantine/*
 data/state/*
+data/corpus/raw/*
+data/corpus/scanned/*
 artifacts/*
 
 !data/incoming/.gitkeep
 !data/archive/.gitkeep
 !data/quarantine/.gitkeep
 !data/state/.gitkeep
+!data/corpus/raw/.gitkeep
+!data/corpus/scanned/.gitkeep
 !artifacts/.gitkeep

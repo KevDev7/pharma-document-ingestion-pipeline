@@ -4,10 +4,10 @@ This file prevents unsupported resume claims. A claim moves to **verified** only
 
 | Potential claim | Evidence required | Current status |
 | --- | --- | --- |
-| Processed X PDFs and Y pages into Z chunks | `pharma-pipeline status` after the benchmark corpus is ingested | Development sample verified; benchmark corpus pending |
-| Skipped duplicate and unchanged PDFs | Duplicate-ingestion test plus benchmark run counts | Implemented; corpus measurement pending |
+| Processed 16 PDFs and 430 pages into 1,987 chunks | Frozen manifest, corpus ingestion run, and saved 10-run benchmark | Verified locally |
+| Skipped duplicate and unchanged PDFs | Duplicate-ingestion test plus corpus replay | Verified: all 16 corpus files skipped on replay |
 | Incrementally handled updated PDFs | Version test showing `supersedes_document_id` and one current version | Implemented and tested |
-| Used OCR fallback for scanned files | OCR test plus corpus OCR-page count | Image-only OCR test passed; corpus measurement pending |
+| Used OCR fallback for scanned files | OCR test plus corpus OCR-page count | Verified: generated image-only test and 1 routed corpus page; OCR accuracy not measured |
 | Improved retrieval Recall@5 from A to B | Labeled query set and committed evaluation output | Not built |
 | Reduced p95 query latency by C percent | Repeated benchmark with saved raw timings | Not built |
 | Ran on S3/SQS | Deployed infrastructure and captured run evidence | Not built; do not claim |
@@ -32,8 +32,6 @@ One corrupt PDF produces an error record and moves to quarantine. Other files in
 
 ## Draft Resume Shape
 
-Do not insert values until the evidence exists.
-
-1. Built an event-driven pipeline that processed **X PDFs / Y pages** into **Z metadata-rich chunks**, using content hashes to skip duplicate files.
+1. Built an event-driven pipeline that processed **16 FDA PDFs / 430 pages** into **1,987 page-linked chunks**, using content hashes to skip duplicate files.
 2. Added OCR fallback, document versioning, failure quarantine, and page-level lineage for incremental PDF ingestion.
 3. Improved **Recall@5 from A to B** while keeping **p95 retrieval latency below C ms** by evaluating chunking and retrieval strategies.
