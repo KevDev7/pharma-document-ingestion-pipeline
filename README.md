@@ -17,6 +17,8 @@ flowchart LR
     F --> G
     G --> H["SQLite<br/>Documents, pages, chunks, runs"]
     H --> I["FTS5 / BM25 search index"]
+    I --> L["FastAPI retrieval service"]
+    L --> M["Gradio search interface"]
     C -->|Permanent document error| J["Quarantine"]
     C -->|Temporary failure| K["SQS retry"]
 ```
@@ -33,6 +35,7 @@ A chunk is a smaller text section used for search. Source lineage links every ch
 | Processing | Python | Validate, classify, chunk, and route files |
 | State and lineage | SQLite | Store runs, versions, pages, chunks, and errors |
 | Retrieval | SQLite FTS5 with BM25 | Search current document versions |
+| Serving | FastAPI, Gradio | Expose retrieval through JSON and a browser interface |
 | Cloud access | Boto3 | Download exact S3 object versions and manage queue messages |
 | Testing | Pytest | Verify ingestion, OCR, indexing, and S3/SQS behavior |
 
@@ -44,6 +47,7 @@ A chunk is a smaller text section used for search. Source lineage links every ch
 - **Failure isolation:** invalid PDFs move to quarantine, while temporary failures remain available for retry.
 - **Transactional indexing:** new chunks and FTS5 search entries commit in the same SQLite transaction.
 - **Exact source tracking:** cloud records keep the S3 object version, document hash, and page number.
+- **Separate serving boundary:** FastAPI exposes the retrieval contract, while Gradio remains a replaceable client.
 
 ## Verified Results
 
@@ -52,7 +56,7 @@ A chunk is a smaller text section used for search. Source lineage links every ch
 | Live S3/SQS corpus run | 16 PDFs, 430 pages, 1,987 chunks |
 | Cloud run failures | 0 |
 | OCR fallback pages in cloud run | 1 |
-| Automated tests | 66 passed |
+| Automated tests | 71 passed |
 | Retrieval experiment | 21 configurations, 80 labeled questions |
 | BM25 test Recall@5 | 100% on 16 held-out questions |
 | Hybrid test Recall@5 | 87.5% on the same questions |
@@ -69,7 +73,7 @@ See [Retrieval Evaluation](docs/retrieval-evaluation.md) for the full comparison
 
 ## Quick Start
 
-Requirements: Python 3.9+ and the Tesseract command-line program.
+Requirements: Python 3.10+ and the Tesseract command-line program.
 
 ```bash
 python3 -m venv .venv

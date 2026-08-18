@@ -16,6 +16,7 @@ This file links each resume claim to evidence. A claim is **verified** only when
 | Incrementally maintained a durable BM25 index | Trigger lifecycle tests, restart test, integrity check, and saved index benchmark | Verified locally: 77-chunk update transaction; duplicate replay added zero chunks |
 | Exported operational ingestion and index metrics | Versioned JSON schema plus CLI and tests covering versions, duplicates, latency, OCR, errors, and index health | Implemented and tested; development snapshot is not a scale benchmark |
 | Ran on S3/SQS | Deployed infrastructure and captured run evidence | Verified: four outcome-path events plus a fresh 16-PDF / 430-page / 1,987-chunk corpus run; worker was locally invoked, not continuously hosted |
+| Exposed retrieval through an API and browser client | FastAPI contract tests plus a real Gradio browser query | Verified locally; not hosted or load tested |
 
 ## Intended Interview Stories
 

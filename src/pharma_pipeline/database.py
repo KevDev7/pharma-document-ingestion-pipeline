@@ -340,6 +340,19 @@ class PipelineDatabase:
             for row in rows
         ]
 
+    def list_document_types(self) -> List[str]:
+        with self.connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT DISTINCT c.document_type
+                FROM chunks c
+                JOIN documents d ON d.document_id = c.document_id
+                WHERE d.is_current = 1
+                ORDER BY c.document_type
+                """
+            ).fetchall()
+        return [str(row["document_type"]) for row in rows]
+
     def start_run(self, run_id: str, trigger_type: str, discovered_files: int) -> None:
         with self.connect() as connection:
             connection.execute(

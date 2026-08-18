@@ -4,7 +4,7 @@ This guide covers local installation, AWS profile use, pipeline commands, corpus
 
 ## Requirements
 
-- Python 3.9 or newer.
+- Python 3.10 or newer.
 - Tesseract installed as a system command.
 - An AWS CLI profile only when running the S3/SQS worker.
 
@@ -22,6 +22,12 @@ Install the optional embedding and retrieval packages only when running the retr
 
 ```bash
 pip install -e '.[retrieval,dev]'
+```
+
+Install the optional API and browser interface packages when serving search:
+
+```bash
+pip install -e '.[serve,dev]'
 ```
 
 ## Initialize Local State
@@ -95,6 +101,31 @@ pharma-pipeline index-status
 ```
 
 Normal ingestion updates the index automatically. Rebuild it only for recovery.
+
+## Serve Search
+
+Start the FastAPI retrieval service in one terminal:
+
+```bash
+pharma-pipeline serve-api --host 127.0.0.1 --port 8000
+```
+
+The JSON API is available at `http://127.0.0.1:8000`, and its generated API documentation is at `http://127.0.0.1:8000/docs`. It exposes:
+
+- `GET /health` for pipeline and search-index status.
+- `GET /document-types` for available filters.
+- `POST /search` for ranked, source-linked passages.
+
+Start the Gradio client in a second terminal:
+
+```bash
+pharma-pipeline serve-ui \
+  --api-url http://127.0.0.1:8000 \
+  --host 127.0.0.1 \
+  --port 7860
+```
+
+Open `http://127.0.0.1:7860`. Add `--share` only when a temporary public Gradio link is needed. The UI displays retrieved evidence; it does not add an LLM or generate claims beyond the stored passages.
 
 ## Corpus Commands
 

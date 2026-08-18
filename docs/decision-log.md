@@ -103,3 +103,11 @@
 **Reason:** Retrying the same malformed file cannot repair it. Stored errors and hash-addressed quarantine objects preserve evidence without blocking other uploads.
 
 **Trade-off:** The code must classify permanent error types. Unknown failures retry by default so recoverable work is not discarded.
+
+## 014: Serve retrieval through FastAPI and keep Gradio as a client
+
+**Decision:** Expose health, document-type, and search endpoints through FastAPI. Use Gradio only as a browser client of that API.
+
+**Reason:** The JSON contract gives other clients a stable way to use the processed data. Gradio provides a quick portfolio demo without mixing interface code into ingestion or retrieval.
+
+**Trade-off:** The interface returns ranked source passages rather than an LLM-written answer. This is less conversational, but it avoids a new unmeasured model dependency and keeps every displayed claim tied directly to stored text. Python 3.10 is now the minimum version so the serving and retrieval dependency groups can coexist.

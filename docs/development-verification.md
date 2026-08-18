@@ -12,7 +12,7 @@ Command:
 .venv/bin/pytest
 ```
 
-Result: **66 tests passed**.
+Result: **71 tests passed**.
 
 The tests cover:
 
@@ -27,6 +27,7 @@ The tests cover:
 - Retrieval label validation, page-level scoring, duplicate-page collapse, chunking strategies, FTS5 BM25, reciprocal-rank fusion, manifest metadata, and vector cache behavior.
 - Durable-index migration/backfill, interrupted-migration recovery, transactional insert/update/delete behavior, duplicate stability, current-version indexing, restart persistence, metadata filtering, rollback, and recovery rebuild.
 - S3 event parsing, exact object-version downloads, processed/quarantine archival, message acknowledgement, and retryable failure behavior.
+- FastAPI health/search contracts, request validation, source metadata, and Gradio client behavior.
 
 ## Real PDF Ingestion
 
@@ -173,6 +174,12 @@ Ten temporary-database runs compared a 77-chunk transaction from the median-size
 | Full recovery rebuild | 2,037 | 0.0136 seconds | 0.0142 seconds |
 
 At this size, database transaction overhead hides most timing differences. The result supports bounded incremental updates and database consistency, not a speedup claim. Raw measurements are in [`docs/benchmarks/search-index-2026-08-17.json`](benchmarks/search-index-2026-08-17.json).
+
+## Local Retrieval Service
+
+FastAPI and Gradio were started as separate local processes against the development database. `GET /health` returned HTTP 200 and a healthy FTS5 integrity check. `POST /search` returned HTTP 200 with the expected process-validation page 14 ranked first for "What must be completed before commercial distribution?"
+
+The same query was submitted through the Gradio interface in Chrome. The page displayed five ranked passages with filenames, page numbers, document types, relative BM25 scores, and measured API latency. Desktop and 390-by-844 mobile layouts were checked without overlapping controls. This verifies local serving and browser behavior. It is not evidence of public hosting, concurrent-user capacity, or LLM answer quality.
 
 ## Labeled Retrieval Evaluation
 

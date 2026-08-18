@@ -23,6 +23,9 @@ SQLite documents/pages/chunks/run metrics
         v
 FTS5/BM25 index update in the same transaction
         |
+        v
+FastAPI retrieval service --> Gradio browser client
+        |
         +--> data/archive/      successful or duplicate PDFs
         +--> data/quarantine/   failed PDFs
 ```
@@ -107,6 +110,12 @@ This prevents duplicate records. It does not depend on exactly-once event delive
 Existing databases receive a one-time index backfill. Normal startup checks the index and does not rebuild it. `pharma-pipeline index-status` runs SQLite's FTS integrity check. `rebuild-search-index` is used only for recovery.
 
 Search requires `documents.is_current = 1`. Older immutable versions stay in the source tables for audit. Their search entries are removed so they cannot affect results or BM25 scores. SHA-256 duplicate checks run before chunk insertion, so replayed files do not grow the index.
+
+## Serving Boundary
+
+FastAPI is the serving layer. `POST /search` accepts a query, result limit, and optional document-type filter. It returns ranked chunks with the immutable document ID and hash, source filename, page number, document type, text, relative BM25 score, and measured search latency. `GET /health` reads the same control database and runs the FTS5 integrity check.
+
+Gradio is a client of this API. It keeps browser presentation separate from retrieval and can be replaced without changing ingestion or search. The current interface shows grounded passages and source metadata. It does not use an LLM, and it does not describe BM25 scores as confidence probabilities.
 
 ## OCR Routing
 

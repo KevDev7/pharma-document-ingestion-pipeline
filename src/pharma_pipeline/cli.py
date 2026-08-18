@@ -120,6 +120,20 @@ def build_parser() -> argparse.ArgumentParser:
         "--config", type=Path, default=None, help="Defaults to evaluation/config.json"
     )
     retrieval.add_argument("--output", type=Path, required=True)
+
+    serve_api = subparsers.add_parser(
+        "serve-api", help="Serve health and document search endpoints with FastAPI"
+    )
+    serve_api.add_argument("--host", default="127.0.0.1")
+    serve_api.add_argument("--port", type=int, default=8000)
+
+    serve_ui = subparsers.add_parser(
+        "serve-ui", help="Launch the Gradio document search interface"
+    )
+    serve_ui.add_argument("--api-url", default="http://127.0.0.1:8000")
+    serve_ui.add_argument("--host", default="127.0.0.1")
+    serve_ui.add_argument("--port", type=int, default=7860)
+    serve_ui.add_argument("--share", action="store_true")
     return parser
 
 
@@ -243,6 +257,22 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
                 "test_candidate_recall_at_5_delta"
             ],
         }
+    elif args.command == "serve-api":
+        import uvicorn
+
+        from .service import create_app
+
+        uvicorn.run(create_app(args.root), host=args.host, port=args.port)
+        return
+    elif args.command == "serve-ui":
+        from .ui import create_demo
+
+        create_demo(args.api_url).launch(
+            server_name=args.host,
+            server_port=args.port,
+            share=args.share,
+        )
+        return
     else:
         raise ValueError(f"Unsupported command: {args.command}")
 
