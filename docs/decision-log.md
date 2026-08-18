@@ -79,3 +79,11 @@
 **Reason:** On 38 controlled routing scenarios, the character-only rule missed 19 scans carrying hidden text and reached 38.71% recall. The page-aware rule reached 100% routing recall, and the final extractor produced the expected outcome in all 38 scenarios, including six accurate text layers, a clean repetitive certificate, and one rejected critical-field conflict. It added no OCR routes across the 430-page core audit. On 12 unique visible scan images, `--psm 6` produced 2.10% mean word error rate versus 2.27% for `--psm 3`; both recovered every labeled phrase. Timing used warm-ups and alternating order, with only a modest local `--psm 6` advantage.
 
 **Trade-off:** The stress set is controlled and uses born-digital text as its reference. It does not establish general OCR accuracy or prove Tesseract is better than EasyOCR or PaddleOCR. A critical-field disagreement quarantines the whole file because the current schema does not preserve two competing transcriptions; this loses automatic throughput to prevent a potentially wrong compliance value from becoming searchable.
+
+## 011: Export operational metrics from the control database
+
+**Decision:** Generate a versioned JSON operational snapshot directly from SQLite run, error, document, page, and search-index records.
+
+**Reason:** The pipeline already records the required facts transactionally. Reading those facts avoids a second metrics database before deployment and creates stable definitions for current-corpus size, duplicate skips, failures, OCR usage, run latency, and index health.
+
+**Trade-off:** This is a point-in-time export, not a live dashboard or alerting system. It is sufficient for the single-worker local milestone; cloud monitoring and alarms should consume the same metric meanings once a deployed worker exists.

@@ -86,4 +86,10 @@ The committed stress manifest reconstructs 38 routing scenarios from six frozen 
 
 ## Intended Cloud Boundary
 
-The eventual cloud version can replace the watched folder with an S3 object-created event and SQS message. The `IngestionPipeline.ingest_paths()` processing boundary remains the same. That migration remains deferred until durable incremental retrieval is measured locally.
+The cloud version can replace the watched folder with an S3 object-created event and SQS message. The `IngestionPipeline.ingest_paths()` processing boundary remains the same. Durable incremental retrieval and the local evaluation gates are now measured; AWS account configuration is the next integration boundary.
+
+## Operational Observability
+
+`ingestion_runs`, `ingestion_errors`, document aggregates, page extraction methods, and `search_index_state` form the local operational record. `pharma-pipeline export-metrics` reads those tables into a versioned JSON snapshot without document text or source paths. Current-corpus counts are reported separately from historical immutable versions so a document replacement does not look like active-corpus growth.
+
+This is intentionally pull-based local observability. The S3 milestone can ship the same counters to a cloud monitoring service later, but the metric meanings should remain stable across that migration.

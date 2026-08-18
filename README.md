@@ -41,6 +41,7 @@ You can also process files directly without moving them:
 ```bash
 pharma-pipeline ingest /path/to/document.pdf
 pharma-pipeline status
+pharma-pipeline export-metrics --output data/state/operational-metrics.json
 pharma-pipeline search "What must be completed before commercial distribution?" --top-k 5
 pharma-pipeline index-status
 ```
@@ -67,7 +68,7 @@ pharma-pipeline benchmark-ocr \
   --output docs/benchmarks/ocr-routing-2026-08-17.json
 ```
 
-The original character-count router reached 38.71% recall on the 38-case stress set because hidden text bypassed OCR verification. The page-aware router reached 100% recall, while the production extractor produced the expected outcome in all 38 scenarios, including preserving six accurate text layers and rejecting one matched-length critical-field conflict. The router added no work during a separate audit of all 430 core-corpus pages. On 12 unique visible scan images, Tesseract `--psm 6` recovered every labeled phrase with 2.10% mean word error rate and 0.91-second p50 OCR time per page. These are controlled local measurements, not a general OCR accuracy claim.
+The original character-count router reached 38.71% recall on the 38-case stress set because hidden text bypassed OCR verification. The page-aware router reached 100% recall, while the production extractor produced the expected outcome in all 38 scenarios, including preserving six accurate text layers and rejecting one matched-length critical-field conflict. The router added no work during a separate audit of all 430 core-corpus pages. On 12 unique visible scan images, Tesseract `--psm 6` recovered every labeled phrase with 2.10% mean word error rate and 0.92-second p50 OCR time per page. These are controlled local measurements, not a general OCR accuracy claim.
 
 ## Retrieval Evaluation
 
@@ -95,6 +96,17 @@ The SQLite database at `data/state/pipeline.db` contains:
 
 See [docs/architecture.md](docs/architecture.md) for the system boundary and [docs/resume-evidence.md](docs/resume-evidence.md) for the claim ledger.
 
+## Operational Metrics
+
+Every ingestion run writes file counts, page and chunk totals, duration, and errors to SQLite. Export a content-free operational snapshot with:
+
+```bash
+pharma-pipeline export-metrics \
+  --output data/state/operational-metrics.json
+```
+
+The export separates current documents from historical versions, reports processed/skipped/failed files, p50/p95 run duration, OCR usage, grouped error types, and FTS5 integrity. It does not include extracted document text or source paths. See [docs/operations.md](docs/operations.md) for field definitions and suggested checks.
+
 ## Current Scope
 
-This milestone does not use Docker, Airflow, a managed vector database, or cloud services. SQLite FTS5 is sufficient for the current corpus and updates incrementally with each ingested document. The next evidence gap is OCR routing quality on a deliberately scanned stress corpus; cloud object events come later only if local measurements justify the migration.
+This milestone does not use Docker, Airflow, a managed vector database, or cloud services. SQLite FTS5 is sufficient for the measured single-worker corpus and updates incrementally with each ingested document. Corpus ingestion, retrieval, OCR routing, durable indexing, and operational export are reproducible locally. The next milestone is replacing the watched folder with S3 object-created events delivered through SQS; see [docs/s3-handoff.md](docs/s3-handoff.md) for the boundary and required AWS inputs.

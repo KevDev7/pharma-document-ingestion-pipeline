@@ -14,6 +14,7 @@ This file prevents unsupported resume claims. A claim moves to **verified** only
 | Confirmed the locked choice on untouched test data | Final 16-question test split created without retrieval-output inspection | Verified locally: BM25 100.00% versus hybrid 87.50% Recall@5; do not generalize perfect recall |
 | Measured p95 retrieval latency across repeated interleaved trials | 80 raw timing samples per retriever | Verified locally: BM25 1.17 ms; hybrid candidate 11.74 ms |
 | Incrementally maintained a durable BM25 index | Trigger lifecycle tests, restart test, integrity check, and saved index benchmark | Verified locally: 77-chunk update transaction; duplicate replay added zero chunks |
+| Exported operational ingestion and index metrics | Versioned JSON schema plus CLI and tests covering versions, duplicates, latency, OCR, errors, and index health | Implemented and tested; development snapshot is not a scale benchmark |
 | Ran on S3/SQS | Deployed infrastructure and captured run evidence | Not built; do not claim |
 
 ## Intended Interview Stories
@@ -41,6 +42,10 @@ The project compared 21 configurations using separate development, validation, a
 ### Incremental search indexing
 
 FTS5 triggers update the selected BM25 index inside the same transaction as chunk and document-version changes. Duplicate events add no index rows, superseded versions are removed from the active index, and a one-time migration backfilled existing data. The local benchmark did not show a meaningful latency win over rebuilding at this corpus size, so the defensible claim is bounded incremental work and consistency, not faster indexing.
+
+### Operational metrics
+
+The worker writes each run and file failure to SQLite, and the export command produces a content-free JSON snapshot with current versus historical corpus size, skip/failure rates, OCR usage, latency percentiles, grouped error types, and search-index integrity. The saved 19-document development snapshot mixes controlled runs and is useful as proof of observability, not as a benchmark or resume-scale claim.
 
 ## Draft Resume Shape
 

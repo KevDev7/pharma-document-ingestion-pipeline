@@ -8,6 +8,7 @@ from .benchmark import benchmark_corpus
 from .config import DEFAULT_ROOT, Settings
 from .corpus import download_manifest, summarize_corpus
 from .experiments import run_retrieval_experiment
+from .metrics import export_operational_metrics
 from .ocr_benchmark import run_ocr_benchmark
 from .pipeline import IngestionPipeline
 from .search_benchmark import benchmark_search_index
@@ -35,6 +36,11 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("scan", help="Process and archive PDFs currently in data/incoming")
     subparsers.add_parser("watch", help="Watch data/incoming and process new PDFs")
     subparsers.add_parser("status", help="Print persisted pipeline counts")
+    metrics = subparsers.add_parser(
+        "export-metrics",
+        help="Export an operational JSON snapshot without document content",
+    )
+    metrics.add_argument("--output", type=Path, required=True)
 
     search = subparsers.add_parser(
         "search", help="Search current document chunks in the durable BM25 index"
@@ -128,6 +134,10 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             **pipeline.database.summary(),
             "search_index": pipeline.database.search_index_status(),
         }
+    elif args.command == "export-metrics":
+        output = export_operational_metrics(pipeline.database)
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(output, indent=2) + "\n", encoding="utf-8")
     elif args.command == "search":
         started = time.perf_counter()
         results = pipeline.database.search_chunks(

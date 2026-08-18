@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-17T21:52:33.129151+00:00",
+  "documents": {
+    "document_versions": 19,
+    "current_documents": 19,
+    "superseded_versions": 0,
+    "historical_pages": 451,
+    "historical_chunks": 2037,
+    "current_pages": 451,
+    "current_chunks": 2037,
+    "current_ocr_pages": 1,
+    "current_source_bytes": 6272852
+  },
+  "ingestion": {
+    "runs": 6,
+    "discovered_files": 36,
+    "processed_files": 19,
+    "skipped_files": 17,
+    "failed_files": 0,
+    "processed_pages": 451,
+    "produced_chunks": 2037,
+    "status_counts": {
+      "completed": 6
+    },
+    "trigger_counts": {
+      "corpus_ingestion": 2,
+      "directory_scan": 1,
+      "file_created_event": 1,
+      "manual": 2
+    },
+    "duration_seconds": {
+      "samples": 6,
+      "p50": 0.02665,
+      "p95": 0.96855,
+      "max": 1.2802
+    },
+    "skip_rate": 0.472222,
+    "failure_rate": 0.0
+  },
+  "extraction": {
+    "current_page_methods": {
+      "digital": 450,
+      "ocr": 1
+    },
+    "current_ocr_rate": 0.002217
+  },
+  "errors": {
+    "total": 0,
+    "by_type": {}
+  },
+  "search_index": {
+    "status": "healthy",
+    "indexed_chunks": 2037,
+    "current_searchable_chunks": 2037,
+    "total_stored_chunks": 2037,
+    "schema_version": 2,
+    "initialized_at": "2026-08-17T21:06:59.282802+00:00",
+    "initial_backfill_chunks": 2037,
+    "initial_backfill_seconds": 0.029035,
+    "last_rebuilt_at": null
+  }
+}

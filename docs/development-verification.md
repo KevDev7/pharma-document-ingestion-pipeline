@@ -12,7 +12,7 @@ Command:
 .venv/bin/pytest
 ```
 
-Result: **44 tests passed**.
+Result: **46 tests passed**.
 
 The tests cover:
 
@@ -115,6 +115,12 @@ The production extractor produced the expected outcome on all 38 scenarios and r
 | `--psm 6` | 2.10% | 100.00% | 0.9231 | 1.2730 |
 
 OCR quality uses 12 unique visible images rather than double-counting hidden-text variants that share the same raster. The digital source text is controlled ground truth, not an independent transcription. OCR latency excludes rasterization, uses one warm-up per configuration, and alternates execution order. The result supports the routing change and retaining `--psm 6`; it does not establish performance on handwriting or heavily damaged scans. Raw cases and measurements are saved in [`docs/benchmarks/ocr-routing-2026-08-17.json`](benchmarks/ocr-routing-2026-08-17.json).
+
+## Operational Metrics Export
+
+The `export-metrics` command was run against the local development database after corpus, watcher, and manual verification runs. The snapshot reported 19 current documents, 451 current pages, 2,037 current searchable chunks, one OCR page, six completed runs, zero recorded failures, and a healthy FTS5 integrity check.
+
+This snapshot mixes controlled development activity and is not a corpus benchmark or production scale claim. It verifies that operational state can be exported without document text, filenames, hashes, source paths, or error messages. The versioned output is saved in [`docs/benchmarks/operational-metrics-2026-08-17.json`](benchmarks/operational-metrics-2026-08-17.json).
 
 ## Durable Search Index
 
