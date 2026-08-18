@@ -1,6 +1,6 @@
 # Pharmaceutical Document Ingestion Pipeline
 
-An event-driven data pipeline that turns pharmaceutical PDFs into validated page and chunk records with source lineage. The current version runs locally and processes a document when it appears in `data/incoming/`.
+An event-driven data pipeline that turns pharmaceutical PDFs into validated page and chunk records with source lineage. It accepts local file-created events or version-aware S3 object-created events delivered through SQS.
 
 This repository intentionally separates ingestion from the future retrieval application. SQLite is the local control store for the first milestone; the storage interface can later move to PostgreSQL and pgvector without changing PDF extraction or chunking.
 
@@ -15,6 +15,8 @@ This repository intentionally separates ingestion from the future retrieval appl
 - Searches only current document versions while retaining superseded source records for audit.
 - Tracks processing runs, failures, superseded file versions, page counts, and OCR usage.
 - Archives successfully processed files and quarantines failures.
+- Polls an encrypted SQS queue for S3 object-created events and records the exact S3 object version as source lineage.
+- Copies successful or duplicate objects to `processed/`, moves deterministic document failures to `quarantine/`, and leaves transient failures unacknowledged for retry.
 - Includes automated tests for ingestion, duplicate handling, version replacement, and OCR fallback.
 - Reconstructs a hash-frozen FDA corpus from a versioned provenance manifest.
 - Benchmarks repeated ingestion with a fresh SQLite database for each run.
@@ -45,6 +47,18 @@ pharma-pipeline export-metrics --output data/state/operational-metrics.json
 pharma-pipeline search "What must be completed before commercial distribution?" --top-k 5
 pharma-pipeline index-status
 ```
+
+The deployed S3/SQS ingress can be consumed by the same processing boundary:
+
+```bash
+pharma-pipeline watch-s3 \
+  --bucket YOUR_PRIVATE_BUCKET \
+  --queue-name YOUR_STANDARD_QUEUE \
+  --region us-east-1 \
+  --profile YOUR_WORKER_PROFILE
+```
+
+The verified deployment uses a private, versioned, SSE-S3 bucket; an encrypted standard SQS queue; a dead-letter queue after three failed receives; and a least-privilege worker identity. See [the S3 integration evidence](docs/benchmarks/aws-integration-2026-08-18.json) for the live scenarios and limitations.
 
 ## Reproducible Corpus
 
@@ -109,4 +123,4 @@ The export separates current documents from historical versions, reports process
 
 ## Current Scope
 
-This milestone does not use Docker, Airflow, a managed vector database, or cloud services. SQLite FTS5 is sufficient for the measured single-worker corpus and updates incrementally with each ingested document. Corpus ingestion, retrieval, OCR routing, durable indexing, and operational export are reproducible locally. The next milestone is replacing the watched folder with S3 object-created events delivered through SQS; see [docs/s3-handoff.md](docs/s3-handoff.md) for the boundary and required AWS inputs.
+This milestone does not use Docker, Airflow, or a managed vector database. SQLite FTS5 is sufficient for the measured single-worker corpus and updates incrementally with each ingested document. S3/SQS ingress is deployed and verified with a locally invoked worker; it is not presented as an always-on hosted service or a distributed SQLite design. See [docs/s3-handoff.md](docs/s3-handoff.md) for the cloud boundary and outcome policy.

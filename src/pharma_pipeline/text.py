@@ -11,7 +11,6 @@ def clean_text(text: str) -> str:
 def classify_document_type(text: str) -> str:
     lower = text.lower()
     rules = (
-        (("storage condition",), "Storage Conditions Letter"),
         (("certificate of quality",), "Certificate of Quality"),
         (("packaging component specification", "packaging specification"), "Packaging Specification"),
         (("transmissible spongiform", "bse/tse", "bse", "tse"), "BSE/TSE Declaration"),
@@ -19,6 +18,7 @@ def classify_document_type(text: str) -> str:
         (("supplier qualification",), "Supplier Qualification"),
         (("chain of custody",), "Chain of Custody"),
         (("animal origin",), "Animal Origin Statement"),
+        (("storage condition",), "Storage Conditions Letter"),
     )
     for phrases, label in rules:
         if any(phrase in lower for phrase in phrases):

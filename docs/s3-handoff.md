@@ -10,7 +10,7 @@ The local processing boundary is ready to receive a different event source:
 - The selected BM25 index updates in the same transaction as current chunks.
 - Corpus ingestion, OCR routing, retrieval, indexing, and metrics export have repeatable tests or saved artifacts.
 
-## First Cloud Increment
+## Deployed Cloud Increment
 
 Keep the processing code unchanged and replace only the landing mechanism:
 
@@ -26,7 +26,7 @@ PDF uploaded to S3 raw prefix
 
 SQS is intentionally between S3 and the worker. It buffers bursts, supports retry visibility, and allows a dead-letter queue without treating S3 notifications as exactly-once delivery. Direct S3 notifications require an SQS standard queue. The SHA-256 database constraint remains the idempotency boundary.
 
-The worker should delete a message after successful or duplicate processing. A deterministic document error, such as an invalid PDF that was durably recorded and quarantined, can also be acknowledged so it does not retry forever. Transient download, database, or worker failures must leave the message undeleted so visibility timeout and the dead-letter policy can retry or isolate it.
+The worker deletes a message after successful or duplicate processing. A deterministic document error, such as an invalid PDF that was durably recorded and quarantined, is also acknowledged so it does not retry forever. Transient download, database, or worker failures leave the message undeleted so visibility timeout and the dead-letter policy can retry or isolate it.
 
 ## Scope of the First Deployment
 
@@ -34,17 +34,26 @@ Start with one worker and retain SQLite on persistent worker storage. This valid
 
 Do not use Lambda for the first version: native PyMuPDF/Tesseract packaging, large PDFs, and OCR duration make a long-running worker easier to explain and operate. Do not add Docker or Airflow solely for keyword coverage.
 
-## AWS Inputs Needed
+## Verified AWS Configuration
 
-The integration can proceed after the user supplies or confirms:
+- Private general-purpose S3 bucket in `us-east-1`.
+- Bucket versioning, SSE-S3 encryption, owner-enforced ownership, and all public access blocked.
+- Notification filter: `incoming/` prefix, `.pdf` suffix, all object-created events.
+- Encrypted standard SQS queue with 15-minute visibility timeout and 20-second long polling.
+- Encrypted dead-letter queue with a 14-day retention period and redrive after three failed receives.
+- Dedicated worker IAM user restricted to the required S3 prefixes and main queue actions.
+- One locally invoked worker using the named AWS profile and the existing SQLite control store.
 
-1. An authenticated AWS CLI profile or SSO session with permission to create and inspect S3/SQS resources.
-2. AWS region.
-3. Globally unique raw-document bucket name or approved naming prefix.
-4. Queue and dead-letter queue names, or approval to use project defaults.
-5. Whether the first worker runs on the local machine against AWS or on an existing persistent EC2 host.
+## Live Verification
 
-The deployed evidence must capture resource identifiers, one successful object event, one duplicate replay, one quarantined failure, queue deletion behavior, and a post-run metrics snapshot before any S3/SQS resume claim is marked verified.
+Four live events were run on August 18, 2026:
+
+1. A previously indexed FDA PDF was skipped by SHA-256 and archived under `processed/`.
+2. A new synthetic certificate produced one page and one searchable chunk with a version-qualified S3 source URI.
+3. Changed contents uploaded under the same object key created a new immutable document version, linked `supersedes_document_id`, and replaced the active FTS5 posting.
+4. An intentionally malformed `.pdf` produced a durable `FileDataError`, moved to `quarantine/`, and was acknowledged.
+
+After the runs, `incoming/` and the main queue were empty, `processed/` contained three hash-addressed objects, `quarantine/` contained one object, and the search-index integrity check remained healthy. Transient retry behavior is covered by the worker test suite rather than a deliberately broken live permission. Exact run IDs, hashes, destinations, counts, and limitations are saved in [`benchmarks/aws-integration-2026-08-18.json`](benchmarks/aws-integration-2026-08-18.json).
 
 ## AWS References
 

@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-08-18T17:59:27.797426+00:00",
+  "scope": "Live S3 object-created events delivered through SQS to one locally invoked worker",
+  "aws": {
+    "region": "us-east-1",
+    "bucket": "pharma-document-pipeline-645968351825-us-east-1-an",
+    "incoming_prefix": "incoming/",
+    "processed_prefix": "processed/",
+    "quarantine_prefix": "quarantine/",
+    "queue": "pharma-document-pipeline-events",
+    "dead_letter_queue": "pharma-document-pipeline-dlq",
+    "max_receive_count": 3,
+    "bucket_versioning": "Enabled",
+    "bucket_encryption": "SSE-S3",
+    "queue_encryption": "SSE-SQS"
+  },
+  "runs": [
+    {
+      "scenario": "duplicate_replay",
+      "run_id": "805bde04-6e94-4817-aa2c-1b9160eb5ff5",
+      "outcome": "skipped",
+      "source_object_version_id": "vtqai0594rMHlNjE5N98iR2MDixuQMo2",
+      "content_sha256": "86eb90b7ede5d23cd3c474b07a5923008561bc1dbe8711c8cdcea27c0350a668",
+      "processed_files": 0,
+      "skipped_files": 1,
+      "failed_files": 0,
+      "duration_seconds": 0.0153,
+      "destination_key": "processed/fda-guidance-orally-disintegrating-tablets-86eb90b7ede5.pdf",
+      "message_acknowledged": true
+    },
+    {
+      "scenario": "new_document",
+      "run_id": "c60b0dff-e332-4d07-b9d6-f89d7606b220",
+      "outcome": "processed",
+      "source_object_version_id": "qcmqQ_w2NpgJXdqCuIxTSM9iUpJREBkK",
+      "content_sha256": "682d4494b5c0804e2c6dfa08686d805fab87c7e2df07f289811cd60e5a124045",
+      "processed_files": 1,
+      "skipped_files": 0,
+      "failed_files": 0,
+      "pages": 1,
+      "chunks": 1,
+      "duration_seconds": 0.0385,
+      "destination_key": "processed/cloud-quality-certificate-682d4494b5c0.pdf",
+      "message_acknowledged": true
+    },
+    {
+      "scenario": "updated_document_version",
+      "run_id": "452b8f25-6847-45a1-8512-ec7ce9184365",
+      "outcome": "processed",
+      "source_object_version_id": "0IH7hg5LWWtLJoz6Gx5mCYLonnApJNw_",
+      "content_sha256": "00e233688330e38a3aee3415cbb0ef06bfea0275b17442c26023dfdb0563a27d",
+      "processed_files": 1,
+      "skipped_files": 0,
+      "failed_files": 0,
+      "pages": 1,
+      "chunks": 1,
+      "duration_seconds": 0.0444,
+      "superseded_document_sha256": "682d4494b5c0804e2c6dfa08686d805fab87c7e2df07f289811cd60e5a124045",
+      "destination_key": "processed/cloud-quality-certificate-00e233688330.pdf",
+      "message_acknowledged": true
+    },
+    {
+      "scenario": "deterministic_invalid_pdf",
+      "run_id": "86fc49a0-0ab1-4f05-ad2b-21d1c2777bec",
+      "outcome": "quarantined",
+      "source_object_version_id": "OIork3GFw.1tLkSE.26mq2L8E5tYkwEN",
+      "content_sha256": "f47496c600c0e4bf4b0e93d3c176db5fa5a606e2782fbc90f370f1a6a42bf41a",
+      "processed_files": 0,
+      "skipped_files": 0,
+      "failed_files": 1,
+      "error_type": "FileDataError",
+      "duration_seconds": 0.0279,
+      "destination_key": "quarantine/invalid-upload-f47496c600c0.pdf",
+      "message_acknowledged": true
+    }
+  ],
+  "post_run_state": {
+    "main_queue_visible_messages": 0,
+    "main_queue_in_flight_messages": 0,
+    "incoming_current_objects": 0,
+    "processed_current_objects": 3,
+    "quarantine_current_objects": 1,
+    "s3_triggered_runs": 4,
+    "current_documents": 20,
+    "document_versions": 21,
+    "current_pages": 452,
+    "current_chunks": 2038,
+    "search_index_status": "healthy"
+  },
+  "limitations": [
+    "The worker was invoked from the development machine; it is not a continuously hosted service.",
+    "The live test covers duplicate, success, replacement, and deterministic quarantine outcomes.",
+    "Transient retry and dead-letter behavior is covered by automated worker tests rather than a deliberately broken live AWS permission."
+  ]
+}

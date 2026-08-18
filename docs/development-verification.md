@@ -1,6 +1,6 @@
 # Development Verification
 
-Date: August 17, 2026
+Date: August 18, 2026
 
 These results verify the ingestion milestone and the first labeled retrieval comparison.
 
@@ -12,7 +12,7 @@ Command:
 .venv/bin/pytest
 ```
 
-Result: **46 tests passed**.
+Result: **66 tests passed**.
 
 The tests cover:
 
@@ -26,6 +26,7 @@ The tests cover:
 - Corpus manifest validation, download receipts, frozen-hash enforcement, and repeatable benchmark counts.
 - Retrieval label validation, page-level scoring, duplicate-page collapse, chunking strategies, FTS5 BM25, reciprocal-rank fusion, manifest metadata, and vector cache behavior.
 - Durable-index migration/backfill, interrupted-migration recovery, transactional insert/update/delete behavior, duplicate stability, current-version indexing, restart persistence, metadata filtering, rollback, and recovery rebuild.
+- S3 event parsing, exact object-version downloads, processed/quarantine archival, message acknowledgement, and retryable failure behavior.
 
 ## Real PDF Ingestion
 
@@ -121,6 +122,21 @@ OCR quality uses 12 unique visible images rather than double-counting hidden-tex
 The `export-metrics` command was run against the local development database after corpus, watcher, and manual verification runs. The snapshot reported 19 current documents, 451 current pages, 2,037 current searchable chunks, one OCR page, six completed runs, zero recorded failures, and a healthy FTS5 integrity check.
 
 This snapshot mixes controlled development activity and is not a corpus benchmark or production scale claim. It verifies that operational state can be exported without document text, filenames, hashes, source paths, or error messages. The versioned output is saved in [`docs/benchmarks/operational-metrics-2026-08-17.json`](benchmarks/operational-metrics-2026-08-17.json).
+
+## Live S3/SQS Integration
+
+A private, versioned S3 bucket in `us-east-1` publishes `incoming/*.pdf` creation events to an encrypted standard SQS queue. The queue uses a 15-minute visibility timeout, 20-second long polling, and an encrypted dead-letter queue after three failed receives. A dedicated least-privilege IAM user runs the single local worker.
+
+| Live scenario | Worker outcome | Pages | Chunks | Queue handling |
+| --- | --- | ---: | ---: | --- |
+| Existing FDA PDF replay | Skipped by SHA-256 | 0 | 0 | Acknowledged |
+| New synthetic certificate | Processed | 1 | 1 | Acknowledged |
+| Changed certificate under the same key | Processed as a new version | 1 | 1 | Acknowledged |
+| Malformed `.pdf` | Quarantined with `FileDataError` | 0 | 0 | Acknowledged |
+
+The changed certificate points to the earlier document through `supersedes_document_id`; exactly one version remains current and only its chunk is active in FTS5. Every source record contains the S3 `versionId`. After verification, `incoming/` and the main queue contained no current work, `processed/` contained three hash-addressed objects, and `quarantine/` contained the malformed object. The final index integrity check remained healthy.
+
+These are integration-path checks, not a throughput benchmark. The worker was invoked from the development machine rather than hosted continuously. Transient failure retries and non-acknowledgement are covered by automated tests; the live test did not intentionally revoke AWS permissions merely to force a message into the dead-letter queue. Raw evidence is saved in [`docs/benchmarks/aws-integration-2026-08-18.json`](benchmarks/aws-integration-2026-08-18.json).
 
 ## Durable Search Index
 

@@ -29,6 +29,32 @@ transactional FTS5 trigger update
 
 The benchmark path uses the same processing boundary but reads hash-frozen files reconstructed from `corpus/manifest.json`. Benchmark runs write to fresh temporary SQLite databases so prior ingestion state cannot turn a measured run into a duplicate replay.
 
+## Deployed S3/SQS Ingress
+
+```text
+private, versioned S3 incoming/*.pdf
+        |
+        v
+S3 ObjectCreated notification
+        |
+        v
+encrypted SQS standard queue --> dead-letter queue after 3 failed receives
+        |
+        v
+single Python worker downloads the exact S3 object version
+        |
+        v
+shared IngestionPipeline boundary + SQLite/FTS5 transaction
+        |
+        +--> S3 processed/     successful or duplicate objects
+        +--> S3 quarantine/    deterministic document failures
+        +--> message retained  transient worker/infrastructure failures
+```
+
+The worker stores a version-qualified `s3://` URI as source lineage, so later bucket updates do not make an existing record ambiguous. The bucket is private, uses SSE-S3 and versioning, and publishes only `incoming/*.pdf` creation events. SQS provides at-least-once delivery, a 15-minute visibility timeout, long polling, SSE-SQS, and a dead-letter queue after three failed receives.
+
+The first deployment deliberately keeps one locally invoked worker and the existing SQLite store. It validates the cloud event boundary without claiming an always-on service or safe multi-worker SQLite concurrency.
+
 ## Retrieval Evaluation Flow
 
 ```text
@@ -84,12 +110,8 @@ The extractor keeps digital text when it is sufficiently long and does not look 
 
 The committed stress manifest reconstructs 38 routing scenarios from six frozen FDA pages and two synthetic controls. It includes image-only scans, two corrupted hidden-text styles, accurate hidden-text scans, and a matched-length critical-field conflict. The benchmark compares the original character threshold with the page-aware router, scores final `PdfExtractor` output, and measures Tesseract `--psm 3` versus `--psm 6` on 12 unique visible scan images. A disagreement in critical fields such as lot number or release status fails extraction rather than silently choosing either value. Generated scan derivatives remain outside Git; the source hashes, page labels, and transformation settings are versioned.
 
-## Intended Cloud Boundary
-
-The cloud version can replace the watched folder with an S3 object-created event and SQS message. The `IngestionPipeline.ingest_paths()` processing boundary remains the same. Durable incremental retrieval and the local evaluation gates are now measured; AWS account configuration is the next integration boundary.
-
 ## Operational Observability
 
 `ingestion_runs`, `ingestion_errors`, document aggregates, page extraction methods, and `search_index_state` form the local operational record. `pharma-pipeline export-metrics` reads those tables into a versioned JSON snapshot without document text or source paths. Current-corpus counts are reported separately from historical immutable versions so a document replacement does not look like active-corpus growth.
 
-This is intentionally pull-based local observability. The S3 milestone can ship the same counters to a cloud monitoring service later, but the metric meanings should remain stable across that migration.
+This is intentionally pull-based observability from the worker's control database. A continuously hosted worker could later ship the same counters to CloudWatch, but the metric meanings should remain stable across that migration.

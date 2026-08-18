@@ -15,7 +15,7 @@ This file prevents unsupported resume claims. A claim moves to **verified** only
 | Measured p95 retrieval latency across repeated interleaved trials | 80 raw timing samples per retriever | Verified locally: BM25 1.17 ms; hybrid candidate 11.74 ms |
 | Incrementally maintained a durable BM25 index | Trigger lifecycle tests, restart test, integrity check, and saved index benchmark | Verified locally: 77-chunk update transaction; duplicate replay added zero chunks |
 | Exported operational ingestion and index metrics | Versioned JSON schema plus CLI and tests covering versions, duplicates, latency, OCR, errors, and index health | Implemented and tested; development snapshot is not a scale benchmark |
-| Ran on S3/SQS | Deployed infrastructure and captured run evidence | Not built; do not claim |
+| Ran on S3/SQS | Deployed infrastructure and captured run evidence | Verified: four live events covered duplicate, new, replacement, and quarantine outcomes; worker was locally invoked, not continuously hosted |
 
 ## Intended Interview Stories
 
@@ -46,6 +46,10 @@ FTS5 triggers update the selected BM25 index inside the same transaction as chun
 ### Operational metrics
 
 The worker writes each run and file failure to SQLite, and the export command produces a content-free JSON snapshot with current versus historical corpus size, skip/failure rates, OCR usage, latency percentiles, grouped error types, and search-index integrity. The saved 19-document development snapshot mixes controlled runs and is useful as proof of observability, not as a benchmark or resume-scale claim.
+
+### S3/SQS event ingestion
+
+A private, versioned S3 bucket publishes only `incoming/*.pdf` object-created events to an encrypted standard SQS queue. A least-privilege worker downloads the exact object version, reuses the ingestion transaction, and acknowledges only handled outcomes. Four live events verified a duplicate skip, new document, changed version, and deterministic quarantine; the main queue returned to zero messages after every handled event. The worker ran from the development machine, so the defensible claim is deployed cloud ingress and queue semantics, not an always-on hosted service.
 
 ## Draft Resume Shape
 

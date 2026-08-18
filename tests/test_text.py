@@ -11,6 +11,10 @@ def test_clean_text_preserves_line_boundaries() -> None:
     ("text", "expected"),
     [
         ("Certificate of Quality\nLot Number: 123", "Certificate of Quality"),
+        (
+            "Certificate of Quality\nStorage Conditions: 5 C to 25 C",
+            "Certificate of Quality",
+        ),
         ("Packaging Component Specification", "Packaging Specification"),
         ("Supplier Qualification Record", "Supplier Qualification"),
         ("Unrecognized content", "Other"),

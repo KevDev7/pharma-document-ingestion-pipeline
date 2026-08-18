@@ -87,3 +87,19 @@
 **Reason:** The pipeline already records the required facts transactionally. Reading those facts avoids a second metrics database before deployment and creates stable definitions for current-corpus size, duplicate skips, failures, OCR usage, run latency, and index health.
 
 **Trade-off:** This is a point-in-time export, not a live dashboard or alerting system. It is sufficient for the single-worker local milestone; cloud monitoring and alarms should consume the same metric meanings once a deployed worker exists.
+
+## 012: Use S3 notifications through SQS instead of direct worker coupling
+
+**Decision:** Publish versioned `incoming/*.pdf` S3 object-created events to an encrypted standard SQS queue, then let one Python worker download and process each object version.
+
+**Reason:** SQS buffers discrete uploads, supports long polling and retry visibility, and isolates poison messages through a dead-letter queue. The worker can reuse the measured ingestion boundary while SHA-256 and the database constraint handle repeated delivery.
+
+**Trade-off:** The verified worker was invoked from the development machine and still writes to SQLite. This proves the cloud ingress and outcome policy, not an always-on or horizontally scaled service. A shared database and persistent compute would be required before adding concurrent workers.
+
+## 013: Acknowledge deterministic document failures after quarantine
+
+**Decision:** Copy invalid PDFs and other deterministic document failures to `quarantine/`, persist the error, delete the incoming object, and acknowledge the SQS message. Leave transient download, database, and worker failures unacknowledged.
+
+**Reason:** Retrying malformed bytes cannot repair the document and would waste all three receives before reaching the dead-letter queue. Durable error storage plus a hash-addressed quarantine object preserves evidence without blocking unrelated uploads.
+
+**Trade-off:** The distinction depends on an explicit allowlist of deterministic error types. Unknown failures retry by default, favoring recoverability over prematurely discarding work.
