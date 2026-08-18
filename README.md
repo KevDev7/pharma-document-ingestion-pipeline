@@ -49,6 +49,16 @@ A chunk is a smaller text section used for search. Source lineage links every ch
 - **Exact source tracking:** cloud records keep the S3 object version, document hash, and page number.
 - **Separate serving boundary:** FastAPI exposes the retrieval contract, while Gradio remains a replaceable client.
 
+## Retrieval Service
+
+The Gradio client calls FastAPI and returns ranked source passages instead of an unverified generated answer. Each result includes the source file, page, retrieval latency, and relative BM25 score.
+
+![Gradio retrieval result showing a grounded source passage](docs/assets/serving-evidence/gradio-grounded-query-top1.jpg)
+
+FastAPI provides separate health, document-type, and search endpoints through a documented JSON contract.
+
+![FastAPI OpenAPI contract](docs/assets/serving-evidence/fastapi-openapi-contract.jpg)
+
 ## Verified Results
 
 | Evaluation | Result |
