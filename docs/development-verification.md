@@ -181,6 +181,8 @@ FastAPI and Gradio were started as separate local processes against the developm
 
 The same query was submitted through the Gradio interface in Chrome. The page displayed five ranked passages with filenames, page numbers, document types, relative BM25 scores, and measured API latency. Desktop and 390-by-844 mobile layouts were checked without overlapping controls. This verifies local serving and browser behavior. It is not evidence of public hosting, concurrent-user capacity, or LLM answer quality.
 
+See [`docs/serving-evidence.md`](serving-evidence.md) for screenshots of the interface, grounded query, ranking details, and generated API contract.
+
 ## Labeled Retrieval Evaluation
 
 The evaluation uses 80 questions across all 16 FDA documents: 32 development questions, 16 validation questions, 16 acceptance questions, and 16 untouched test questions. The labels cover 80 unique source pages, and the largest tested chunk set contains 2,068 records.

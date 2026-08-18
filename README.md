@@ -102,5 +102,6 @@ The verified design uses one worker and SQLite. The S3/SQS input path is deploye
 | [S3/SQS Integration](docs/s3-handoff.md) | AWS configuration, message handling, and live verification |
 | [Retrieval Evaluation](docs/retrieval-evaluation.md) | Labels, compared configurations, metrics, and limits |
 | [Development Verification](docs/development-verification.md) | Test results and measured pipeline evidence |
+| [Retrieval Serving Evidence](docs/serving-evidence.md) | Screenshots of the FastAPI and Gradio serving flow |
 | [Resume Evidence](docs/resume-evidence.md) | Reproducible claims and interview stories |
 | [Corpus](corpus/README.md) | FDA source records, hashes, and OCR stress-set design |
