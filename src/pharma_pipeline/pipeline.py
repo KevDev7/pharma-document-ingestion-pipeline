@@ -214,6 +214,7 @@ class IngestionPipeline:
             return {
                 "source_path": source_path,
                 "outcome": "failed",
+                "sha256": content_hash,
                 "error_type": type(error).__name__,
                 "error_message": str(error),
                 "quarantined_path": str(quarantined_path) if quarantined_path else None,

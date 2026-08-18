@@ -9,6 +9,7 @@ description = "Event-driven ingestion pipeline for pharmaceutical PDF documents"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
+    "boto3>=1.34,<2",
     "PyMuPDF>=1.24,<2",
     "Pillow>=10,<12",
     "pytesseract>=0.3.10,<0.4",

@@ -15,6 +15,10 @@ class OcrConflictError(ValueError):
     pass
 
 
+class PdfValidationError(ValueError):
+    pass
+
+
 CRITICAL_FIELD_LABELS = {
     "lot_number": re.compile(r"^\s*lot\s+(?:number|no\.?)\b", re.I),
     "batch_number": re.compile(r"^\s*batch\s+(?:number|no\.?)\b", re.I),
@@ -94,7 +98,7 @@ class PdfExtractor:
         pages = []
         with fitz.open(pdf_path) as document:
             if document.page_count == 0:
-                raise ValueError("PDF contains no pages")
+                raise PdfValidationError("PDF contains no pages")
 
             for page_index, page in enumerate(document):
                 direct_text = clean_text(page.get_text("text"))

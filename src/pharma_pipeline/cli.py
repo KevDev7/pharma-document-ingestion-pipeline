@@ -4,6 +4,9 @@ import time
 from pathlib import Path
 from typing import Optional, Sequence
 
+import boto3
+
+from .aws_worker import S3SqsWorker
 from .benchmark import benchmark_corpus
 from .config import DEFAULT_ROOT, Settings
 from .corpus import download_manifest, summarize_corpus
@@ -35,6 +38,16 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers.add_parser("scan", help="Process and archive PDFs currently in data/incoming")
     subparsers.add_parser("watch", help="Watch data/incoming and process new PDFs")
+    watch_s3 = subparsers.add_parser(
+        "watch-s3", help="Poll SQS and process S3 object-created events"
+    )
+    watch_s3.add_argument("--bucket", required=True)
+    watch_s3.add_argument("--queue-name", required=True)
+    watch_s3.add_argument("--region", default="us-east-1")
+    watch_s3.add_argument("--profile", default=None)
+    watch_s3.add_argument(
+        "--once", action="store_true", help="Poll once and exit instead of running continuously"
+    )
     subparsers.add_parser("status", help="Print persisted pipeline counts")
     metrics = subparsers.add_parser(
         "export-metrics",
@@ -129,6 +142,23 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     elif args.command == "watch":
         watch_directory(pipeline)
         return
+    elif args.command == "watch-s3":
+        session = boto3.Session(profile_name=args.profile, region_name=args.region)
+        s3_client = session.client("s3")
+        sqs_client = session.client("sqs")
+        queue_url = sqs_client.get_queue_url(QueueName=args.queue_name)["QueueUrl"]
+        worker = S3SqsWorker(
+            pipeline=pipeline,
+            s3_client=s3_client,
+            sqs_client=sqs_client,
+            queue_url=queue_url,
+            bucket=args.bucket,
+        )
+        if args.once:
+            output = {"messages": worker.run_once(max_messages=1, wait_time_seconds=20)}
+        else:
+            worker.run_forever()
+            return
     elif args.command == "status":
         output = {
             **pipeline.database.summary(),
