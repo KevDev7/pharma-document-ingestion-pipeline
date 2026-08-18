@@ -123,4 +123,4 @@ The export separates current documents from historical versions, reports process
 
 ## Current Scope
 
-This milestone does not use Docker, Airflow, or a managed vector database. SQLite FTS5 is sufficient for the measured single-worker corpus and updates incrementally with each ingested document. S3/SQS ingress is deployed and verified with a locally invoked worker; it is not presented as an always-on hosted service or a distributed SQLite design. See [docs/s3-handoff.md](docs/s3-handoff.md) for the cloud boundary and outcome policy.
+This project implements a single-worker, event-driven PDF ingestion pipeline. S3/SQS provides cloud ingress, while SQLite stores document lineage and maintains the FTS5/BM25 search index. The worker currently runs from a development machine rather than as an always-on hosted service. Supporting concurrent cloud workers would require moving state to shared storage such as PostgreSQL. See [docs/s3-handoff.md](docs/s3-handoff.md) for the cloud boundary and outcome policy.
