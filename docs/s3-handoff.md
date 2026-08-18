@@ -1,18 +1,18 @@
 # S3 Integration Handoff
 
-## Local Readiness
+## Shared Processing Logic
 
-The local processing boundary is ready to receive a different event source:
+Local and S3 inputs use the same processing code:
 
-- SHA-256 idempotency handles repeated delivery.
+- SHA-256 file fingerprints prevent duplicate records when events repeat.
 - A failed file is recorded and isolated without stopping the batch.
 - Documents, pages, chunks, versions, run metrics, and errors are persisted.
 - The selected BM25 index updates in the same transaction as current chunks.
-- Corpus ingestion, OCR routing, retrieval, indexing, and metrics export have repeatable tests or saved artifacts.
+- Tests and saved results cover corpus ingestion, OCR routing, retrieval, indexing, and metrics export.
 
 ## Deployed Cloud Increment
 
-Keep the processing code unchanged and replace only the landing mechanism:
+S3/SQS changes how files arrive. It does not replace the ingestion logic:
 
 ```text
 PDF uploaded to S3 raw prefix
@@ -24,15 +24,15 @@ PDF uploaded to S3 raw prefix
         -> acknowledge message according to the outcome policy
 ```
 
-SQS is intentionally between S3 and the worker. It buffers bursts, supports retry visibility, and allows a dead-letter queue without treating S3 notifications as exactly-once delivery. Direct S3 notifications require an SQS standard queue. The SHA-256 database constraint remains the idempotency boundary.
+SQS sits between S3 and the worker. It buffers uploads, hides messages during processing, and sends repeatedly failing messages to a dead-letter queue. S3 can deliver an event more than once, so the SHA-256 database constraint remains the duplicate safeguard.
 
-The worker deletes a message after successful or duplicate processing. A deterministic document error, such as an invalid PDF that was durably recorded and quarantined, is also acknowledged so it does not retry forever. Transient download, database, or worker failures leave the message undeleted so visibility timeout and the dead-letter policy can retry or isolate it.
+The worker deletes a message after successful or duplicate processing. It also deletes a message after storing and quarantining a permanent document error, such as an invalid PDF. Temporary download, database, and worker failures leave the message in the queue for retry.
 
 ## Scope of the First Deployment
 
-Start with one worker and retain SQLite on persistent worker storage. This validates S3/SQS event handling without pretending SQLite supports distributed concurrency. Before adding a second worker or ephemeral compute, move the control tables and search index to a shared durable service and repeat the ingestion/retrieval benchmarks.
+The deployed design uses one worker and SQLite on that worker's storage. Before adding another worker, move the control tables and search index to shared storage. Then repeat the ingestion and retrieval benchmarks.
 
-Do not use Lambda for the first version: native PyMuPDF/Tesseract packaging, large PDFs, and OCR duration make a long-running worker easier to explain and operate. Do not add Docker or Airflow solely for keyword coverage.
+The first version uses a long-running worker instead of Lambda. PyMuPDF and Tesseract require native packages, and OCR time can vary by page. A worker avoids Lambda package and execution-time limits for this test scope.
 
 ## Verified AWS Configuration
 
@@ -53,9 +53,9 @@ Four live events were run on August 18, 2026:
 3. Changed contents uploaded under the same object key created a new immutable document version, linked `supersedes_document_id`, and replaced the active FTS5 posting.
 4. An intentionally malformed `.pdf` produced a durable `FileDataError`, moved to `quarantine/`, and was acknowledged.
 
-After the runs, `incoming/` and the main queue were empty, `processed/` contained three hash-addressed objects, `quarantine/` contained one object, and the search-index integrity check remained healthy. Transient retry behavior is covered by the worker test suite rather than a deliberately broken live permission. Exact run IDs, hashes, destinations, counts, and limitations are saved in [`benchmarks/aws-integration-2026-08-18.json`](benchmarks/aws-integration-2026-08-18.json).
+After these runs, `incoming/` and the main queue were empty. `processed/` contained three hash-addressed objects, and `quarantine/` contained one object. The search index passed its integrity check. Automated tests cover temporary failures and retries. Run IDs, hashes, destinations, counts, and limits are in [`benchmarks/aws-integration-2026-08-18.json`](benchmarks/aws-integration-2026-08-18.json).
 
-The full frozen FDA corpus was also uploaded through the same `incoming/` event path and consumed into a fresh isolated database. Sixteen S3 events completed successfully and produced 430 pages, 1,987 chunks, and one OCR fallback page with no failed or skipped files. Every document stored a distinct version-qualified S3 source URI, the FTS5 index contained all 1,987 current chunks, and the main queue returned to zero visible, in-flight, and delayed messages. Stored processing durations exclude upload, queue transit, and object download, so they are not presented as end-to-end cloud latency.
+The full FDA corpus also used the same `incoming/` path and a fresh database. Sixteen S3 events produced 430 pages, 1,987 chunks, and one OCR page. No files failed or skipped. Every document stored a distinct S3 version ID. The FTS5 index contained all 1,987 current chunks, and the main queue returned to zero messages. Stored processing time excludes upload, queue transit, and download time.
 
 ## AWS References
 

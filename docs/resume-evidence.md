@@ -1,6 +1,6 @@
 # Resume and Interview Evidence
 
-This file prevents unsupported resume claims. A claim moves to **verified** only when its value can be reproduced from a command, database query, or evaluation artifact in this repository.
+This file links each resume claim to evidence. A claim is **verified** only when a repository command, database query, or saved result can reproduce it.
 
 | Potential claim | Evidence required | Current status |
 | --- | --- | --- |
@@ -21,15 +21,15 @@ This file prevents unsupported resume claims. A claim moves to **verified** only
 
 ### Idempotency
 
-File-created events may be delivered more than once. The worker calculates a SHA-256 hash and checks the document table before extracting anything. The unique hash constraint is the final database safeguard.
+File events may arrive more than once. The worker calculates a SHA-256 file fingerprint before extraction. It skips an existing hash, and a unique database constraint provides a final duplicate check.
 
 ### Incremental replacement
 
-A changed PDF receives a new immutable document version. The earlier version remains auditable but is no longer current, and the new row records which version it superseded.
+A changed PDF creates a new immutable version. The earlier version remains available for audit but is no longer current. The new row records which version it replaced.
 
 ### OCR routing
 
-The original character threshold handled image-only scans but trusted hidden OCR layers. A reproducible stress set exposed the gap: baseline recall was 38.71%. Adding full-page image evidence and a fragmented-text signal raised routing recall to 100% across 38 scenarios without adding routes in a 430-page core-corpus audit. Output selection preserved accurate embedded text after OCR verification, while critical-field disagreement failed safely instead of becoming searchable. Tesseract `--psm 6` remained because it had slightly lower word error rate than `--psm 3`; engine-level comparisons remain a future experiment.
+The original character-count rule handled image-only scans but trusted hidden OCR text. A repeatable stress set exposed the gap: recall was 38.71%. Adding a full-page image check and a broken-text signal raised routing recall to 100% across 38 cases. It added no OCR work during a 430-page corpus audit. The extractor kept accurate embedded text and rejected conflicts in critical fields. Tesseract `--psm 6` remained because its word error rate was slightly lower than `--psm 3`.
 
 ### Failure isolation
 
@@ -37,19 +37,19 @@ One corrupt PDF produces an error record and moves to quarantine. Other files in
 
 ### Retrieval design
 
-The project compared 21 configurations using separate development, validation, acceptance, and untouched test questions. BGE-small hybrid retrieval looked stronger during development but lost to boundary-aware BM25 on acceptance Recall@5 and MRR. The simpler BM25 path was locked before final testing. On the untouched test, BM25 reached 100% Recall@5 versus 87.5% for hybrid and was about 10 times faster at p95. The largest tested index was only 2,068 chunks, so exact local vector search was more explainable than adding an approximate vector database.
+The project compared 21 configurations with separate development, validation, acceptance, and test questions. BGE-small hybrid retrieval performed better during development but lost to boundary-aware BM25 on acceptance Recall@5 and MRR. BM25 was selected before final testing. On the untouched test, BM25 reached 100% Recall@5 versus 87.5% for hybrid. Its p95 latency was about one-tenth of hybrid retrieval. The largest tested index had 2,068 chunks, so an approximate vector database was not needed.
 
 ### Incremental search indexing
 
-FTS5 triggers update the selected BM25 index inside the same transaction as chunk and document-version changes. Duplicate events add no index rows, superseded versions are removed from the active index, and a one-time migration backfilled existing data. The local benchmark did not show a meaningful latency win over rebuilding at this corpus size, so the defensible claim is bounded incremental work and consistency, not faster indexing.
+FTS5 triggers update the BM25 index in the same transaction as chunk and version changes. Duplicate events add no index rows. Older versions leave the active index, and a one-time migration indexed existing chunks. At this corpus size, incremental updates were not meaningfully faster than rebuilding. The measured benefit is bounded work and consistent state, not lower latency.
 
 ### Operational metrics
 
-The worker writes each run and file failure to SQLite, and the export command produces a content-free JSON snapshot with current versus historical corpus size, skip/failure rates, OCR usage, latency percentiles, grouped error types, and search-index integrity. The saved 19-document development snapshot mixes controlled runs and is useful as proof of observability, not as a benchmark or resume-scale claim.
+The worker stores each run and failure in SQLite. The export command writes JSON with current and historical corpus size, skip and failure rates, OCR usage, latency percentiles, error types, and index health. It excludes document content. The saved 19-document snapshot mixes development runs, so it proves metric coverage rather than production scale.
 
 ### S3/SQS event ingestion
 
-A private, versioned S3 bucket publishes only `incoming/*.pdf` object-created events to an encrypted standard SQS queue. A least-privilege worker downloads the exact object version, reuses the ingestion transaction, and acknowledges only handled outcomes. Four live events verified a duplicate skip, new document, changed version, and deterministic quarantine. A separate fresh-state run then processed all 16 FDA PDFs into 430 pages and 1,987 chunks with zero failures, one OCR fallback page, unique version-qualified lineage for every document, and an empty queue afterward. The worker ran from the development machine, so the defensible claim is deployed cloud ingress and queue semantics, not an always-on hosted service or end-to-end cloud latency benchmark.
+A private, versioned S3 bucket sends `incoming/*.pdf` events to an encrypted standard SQS queue. A worker with limited permissions downloads the exact object version and uses the same ingestion transaction as local files. Four live events tested duplicate, new, replacement, and quarantine outcomes. A fresh cloud run then processed 16 FDA PDFs into 430 pages and 1,987 chunks with no failures. One page used OCR, every document kept its S3 version ID, and the queue drained to zero. The worker ran from the development machine, not as an always-on hosted service.
 
 ## Draft Resume Shape
 

@@ -8,7 +8,7 @@ pharma-pipeline status
 pharma-pipeline index-status
 ```
 
-`status` is a quick console view. `index-status` also runs the SQLite FTS5 integrity check.
+`status` shows database totals. `index-status` also checks the SQLite FTS5 full-text index for corruption.
 
 ## Export Metrics
 
@@ -17,7 +17,7 @@ pharma-pipeline export-metrics \
   --output data/state/operational-metrics.json
 ```
 
-The JSON has five operational sections:
+The JSON contains five sections:
 
 - `documents`: current corpus size, immutable historical versions, OCR pages, and source bytes.
 - `ingestion`: run and file outcomes, trigger counts, p50/p95/max duration, skip rate, and failure rate.
@@ -25,15 +25,15 @@ The JSON has five operational sections:
 - `errors`: total failures grouped by exception type.
 - `search_index`: integrity status and current/stored chunk counts.
 
-The export excludes extracted text, source paths, hashes, filenames, and error messages. This makes it suitable for CI artifacts or external monitoring without copying document content.
+The export excludes document text, source paths, hashes, filenames, and error messages. CI jobs and monitoring tools can use it without copying document content.
 
 ## Suggested Checks
 
-Treat these as operational signals, not universal alert thresholds:
+Use these checks as signals. They are not fixed alert thresholds:
 
 1. `search_index.status` should be `healthy` and `indexed_chunks` should equal `documents.current_chunks`.
 2. `ingestion.status_counts.running` should not remain present after a worker exits normally.
-3. A nonzero failure rate should be investigated through `ingestion_errors` and files in `data/quarantine/`.
+3. Investigate a nonzero failure rate through `ingestion_errors` and `data/quarantine/`.
 4. A sharp OCR-rate change can indicate a new scan-heavy source or degraded embedded text.
 5. Duplicate skips are expected under at-least-once file-event delivery; unexpected growth can indicate repeated upstream uploads.
 
@@ -48,4 +48,4 @@ pharma-pipeline rebuild-search-index
 pharma-pipeline index-status
 ```
 
-Normal ingestion updates the index transactionally and does not require rebuilds.
+Normal ingestion updates the index in the same transaction as the source rows. It does not require a rebuild.

@@ -1,105 +1,105 @@
 # Decision Log
 
-## 001: Event-driven ingestion instead of Airflow
+## 001: Start ingestion from file events
 
 **Decision:** Process a PDF when it appears in the landing directory.
 
-**Reason:** Documents arrive as discrete files and should become available without waiting for a schedule. This project also gains more portfolio value by demonstrating a different ingestion pattern than the existing Airflow project.
+**Reason:** PDFs arrive as individual files. A file event can start processing immediately instead of waiting for a schedule.
 
 **Trade-off:** A file watcher does not provide Airflow's scheduling UI or DAG history. Run and failure history are stored explicitly in the control database instead.
 
-## 002: No Docker in the first milestone
+## 002: Use a Python environment for the development worker
 
 **Decision:** Use a normal Python virtual environment and system Tesseract installation.
 
-**Reason:** Containerization is already demonstrated elsewhere and does not address the first milestone's central risk: correct incremental processing and lineage.
+**Reason:** The first worker runs on one development machine. A Python virtual environment is enough to test incremental processing, lineage, and failure handling.
 
 **Trade-off:** Tesseract installation differs by operating system. The README documents it as an external requirement.
 
-## 003: SQLite before PostgreSQL/pgvector
+## 003: Use SQLite for the single-worker design
 
 **Decision:** Persist ingestion state in SQLite while building the local event workflow.
 
-**Reason:** SQLite makes the control tables, transactions, duplicate handling, and tests immediately reproducible. Retrieval storage has not been selected yet.
+**Reason:** SQLite supports the required tables, transactions, duplicate checks, and automated tests with no separate database service.
 
-**Trade-off:** SQLite is not intended for several concurrent ingestion workers. PostgreSQL will be evaluated before adding cloud workers or vector retrieval.
+**Trade-off:** SQLite is not designed for several concurrent ingestion workers. PostgreSQL should be evaluated before adding more workers.
 
 ## 004: Conditional OCR
 
-**Decision:** Read embedded PDF text first and use Tesseract only when a page contains fewer than 50 extracted characters.
+**Decision:** Read embedded PDF text first. Use Tesseract only when the page fails the OCR routing checks.
 
 **Reason:** Digital extraction is faster and avoids OCR transcription errors. OCR remains available for image-only scans.
 
-**Trade-off:** Character count is a simple routing signal and may miss pages containing substantial but corrupted embedded text. A later experiment will compare richer quality checks.
+**Trade-off:** The first character-count rule missed scans with plausible but incorrect hidden text. Decision 010 records the tested replacement.
 
 ## 005: Manifest-driven FDA corpus
 
-**Decision:** Build the first benchmark from 16 FDA-authored final guidances and compliance-program PDFs, commit their provenance and expected hashes, and keep downloaded files out of Git.
+**Decision:** Build the benchmark from 16 FDA guidance and compliance-program PDFs. Commit their source records and expected hashes, but keep downloaded files out of Git.
 
-**Reason:** The corpus is relevant to pharmaceutical document processing, can be reconstructed from official sources, and has a clearer reuse basis than sponsor-authored labels or submissions. Frozen hashes make source changes visible instead of silently changing benchmark inputs.
+**Reason:** The documents come from official sources and can be downloaded again. Expected hashes expose upstream file changes instead of silently changing benchmark inputs.
 
-**Trade-off:** The 430-page core is mostly born-digital and is useful for ingestion and retrieval evaluation, but not broad enough for OCR accuracy claims. Historical scanned FDA material will be evaluated as a separate, explicitly labeled stress corpus.
+**Trade-off:** The 430-page corpus is mostly born-digital. It supports ingestion and retrieval tests but cannot support broad OCR accuracy claims. OCR uses a separate controlled stress set.
 
 ## 006: Page-level labels with development, validation, acceptance, and test splits
 
 **Decision:** Label relevant sources by immutable document SHA-256 plus one-based page number, use 32 questions for development, 16 for validation, 16 for acceptance, and 16 untouched questions for final evaluation.
 
-**Reason:** Filename-only labels can silently point at a changed document version. The first validation audit found an incomplete multi-page label, so that split was not treated as untouched test data. Acceptance questions made the final design decision, and a fifth question per document was reserved for untouched evaluation. Duplicate chunks from one page are collapsed before scoring so overlap does not inflate metrics.
+**Reason:** A filename can point to changed content, but a document hash and page number identify one exact source. The validation audit found one incomplete multi-page label, so validation was not treated as untouched data. The acceptance set made the design choice. A fifth question per document stayed untouched for the final test. Scoring collapses duplicate chunks from the same page so overlap does not inflate results.
 
-**Trade-off:** Eighty internally reviewed questions are enough to compare local designs, but not enough to claim general production accuracy or independent regulatory validation.
+**Trade-off:** Eighty project-reviewed questions can compare local designs. They cannot prove general production accuracy or independent regulatory validation.
 
 ## 007: Exact vector search at current corpus size
 
 **Decision:** Cache normalized sentence-transformer embeddings and use exact NumPy cosine search for the retrieval experiment.
 
-**Reason:** The largest tested index contains 2,068 chunks. Exact search keeps the comparison deterministic and avoids tuning an approximate index before scale requires it.
+**Reason:** The largest tested index contains 2,068 chunks. Exact search checks every vector and avoids tuning an approximate index before the corpus needs one.
 
-**Trade-off:** Exact search will not remain appropriate if the corpus grows by orders of magnitude. PostgreSQL/pgvector or another durable vector store should be benchmarked before adding concurrent workers.
+**Trade-off:** Exact search will become slower as the corpus grows. PostgreSQL/pgvector or another vector store should be benchmarked before adding concurrent workers or a much larger corpus.
 
 ## 008: Retain boundary-aware BM25 after acceptance testing
 
 **Decision:** Keep boundary-aware chunks with SQLite FTS5 BM25 as the current retrieval design.
 
-**Reason:** Full-page BGE-small hybrid retrieval ranked first in development and looked better on the audited validation split, but the gain did not generalize. On 16 acceptance questions, BM25 achieved 100.00% Recall@5 and 95.00% MRR versus 93.75% and 87.50% for the hybrid candidate, so BM25 was locked before final testing.
+**Reason:** Full-page BGE-small hybrid retrieval ranked first in development and improved validation results. That gain did not hold on acceptance data. On 16 acceptance questions, BM25 reached 100.00% Recall@5 and 95.00% MRR. Hybrid retrieval reached 93.75% and 87.50%. BM25 was selected before the final test.
 
-**Trade-off:** BM25 does not capture semantic similarity as directly as an embedding model. On the untouched test, it achieved 100.00% Recall@5 versus 87.50% for hybrid and had 1.17 ms p95 retrieval latency versus 11.74 ms. The perfect Recall@5 result is based on only 16 test questions and must not be generalized.
+**Trade-off:** BM25 matches words rather than semantic similarity from embeddings. On the untouched test, it reached 100.00% Recall@5 versus 87.50% for hybrid. Its p95 latency was 1.17 ms versus 11.74 ms. The test has only 16 questions, so the perfect Recall@5 result does not apply to other datasets.
 
 ## 009: Maintain BM25 transactionally in SQLite
 
 **Decision:** Store the selected BM25 index as an FTS5 external-content table maintained by triggers on the existing `chunks` table.
 
-**Reason:** The corpus and ingestion state already live in one single-worker SQLite database. Transactional triggers make new chunks searchable immediately, prevent a separate indexing job from falling behind, and keep every result linked to its document version and page.
+**Reason:** Corpus data and ingestion state already live in one SQLite database. Database triggers make new chunks searchable in the same transaction. This removes a separate indexing job and keeps each result linked to its document version and page.
 
-**Trade-off:** Superseded chunks remain in source tables for audit but are removed from the active index, adding document-version trigger logic to prevent stale versions from affecting BM25 scores. At this small corpus size, full rebuilds and incremental chunk batches take roughly the same wall-clock time, so this milestone proves bounded updates and consistency rather than a meaningful latency win. PostgreSQL or a managed search system is not justified until concurrency or corpus size changes substantially.
+**Trade-off:** Older chunks stay in source tables for audit but leave the active index. This requires extra trigger logic. At this corpus size, full rebuilds and incremental updates take about the same time. The benefit is consistent, bounded updates rather than a measured speedup. A shared database becomes useful when worker count or corpus size increases.
 
 ## 010: Route OCR using text-quality signals
 
 **Decision:** Keep the 50-character floor, but also route embedded text dominated by one-character tokens or paired with a full-page raster image. Retain Tesseract `--psm 6` for the current CPU pipeline.
 
-**Reason:** On 38 controlled routing scenarios, the character-only rule missed 19 scans carrying hidden text and reached 38.71% recall. The page-aware rule reached 100% routing recall, and the final extractor produced the expected outcome in all 38 scenarios, including six accurate text layers, a clean repetitive certificate, and one rejected critical-field conflict. It added no OCR routes across the 430-page core audit. On 12 unique visible scan images, `--psm 6` produced 2.10% mean word error rate versus 2.27% for `--psm 3`; both recovered every labeled phrase. Timing used warm-ups and alternating order, with only a modest local `--psm 6` advantage.
+**Reason:** On 38 controlled cases, the character-only rule missed 19 scans with hidden text and reached 38.71% recall. The page-aware rule reached 100% routing recall. The final extractor produced the expected outcome in all 38 cases. It also added no OCR routes during an audit of all 430 corpus pages. On 12 visible scan images, `--psm 6` produced 2.10% mean word error rate versus 2.27% for `--psm 3`. Both recovered every labeled phrase.
 
-**Trade-off:** The stress set is controlled and uses born-digital text as its reference. It does not establish general OCR accuracy or prove Tesseract is better than EasyOCR or PaddleOCR. A critical-field disagreement quarantines the whole file because the current schema does not preserve two competing transcriptions; this loses automatic throughput to prevent a potentially wrong compliance value from becoming searchable.
+**Trade-off:** The stress set uses born-digital text as its reference. It does not prove general OCR accuracy or compare Tesseract with EasyOCR and PaddleOCR. A conflict in a critical field quarantines the file because the schema stores only one transcription. This reduces automatic throughput but prevents a disputed compliance value from entering search.
 
 ## 011: Export operational metrics from the control database
 
 **Decision:** Generate a versioned JSON operational snapshot directly from SQLite run, error, document, page, and search-index records.
 
-**Reason:** The pipeline already records the required facts transactionally. Reading those facts avoids a second metrics database before deployment and creates stable definitions for current-corpus size, duplicate skips, failures, OCR usage, run latency, and index health.
+**Reason:** The pipeline already records these facts in SQLite. Reading them avoids a second metrics database and keeps one definition for corpus size, duplicate skips, failures, OCR usage, run time, and index health.
 
-**Trade-off:** This is a point-in-time export, not a live dashboard or alerting system. It is sufficient for the single-worker local milestone; cloud monitoring and alarms should consume the same metric meanings once a deployed worker exists.
+**Trade-off:** This is a point-in-time export, not a live dashboard or alerting system. A hosted worker would need monitoring and alarms built from the same metric definitions.
 
 ## 012: Use S3 notifications through SQS instead of direct worker coupling
 
 **Decision:** Publish versioned `incoming/*.pdf` S3 object-created events to an encrypted standard SQS queue, then let one Python worker download and process each object version.
 
-**Reason:** SQS buffers discrete uploads, supports long polling and retry visibility, and isolates poison messages through a dead-letter queue. The worker can reuse the measured ingestion boundary while SHA-256 and the database constraint handle repeated delivery.
+**Reason:** SQS buffers uploads, supports long polling and retries, and moves repeatedly failing messages to a dead-letter queue. The worker reuses the same ingestion code. SHA-256 and a unique database constraint handle duplicate delivery.
 
-**Trade-off:** The verified worker was invoked from the development machine and still writes to SQLite. This proves the cloud ingress and outcome policy, not an always-on or horizontally scaled service. A shared database and persistent compute would be required before adding concurrent workers.
+**Trade-off:** The verified worker runs from the development machine and writes to SQLite. It proves the cloud upload and queue flow, not an always-on or horizontally scaled service. Concurrent workers would require persistent compute and a shared database.
 
 ## 013: Acknowledge deterministic document failures after quarantine
 
-**Decision:** Copy invalid PDFs and other deterministic document failures to `quarantine/`, persist the error, delete the incoming object, and acknowledge the SQS message. Leave transient download, database, and worker failures unacknowledged.
+**Decision:** Copy invalid PDFs and other permanent document failures to `quarantine/`. Store the error, delete the incoming object, and acknowledge the SQS message. Do not acknowledge temporary download, database, or worker failures.
 
-**Reason:** Retrying malformed bytes cannot repair the document and would waste all three receives before reaching the dead-letter queue. Durable error storage plus a hash-addressed quarantine object preserves evidence without blocking unrelated uploads.
+**Reason:** Retrying the same malformed file cannot repair it. Stored errors and hash-addressed quarantine objects preserve evidence without blocking other uploads.
 
-**Trade-off:** The distinction depends on an explicit allowlist of deterministic error types. Unknown failures retry by default, favoring recoverability over prematurely discarding work.
+**Trade-off:** The code must classify permanent error types. Unknown failures retry by default so recoverable work is not discarded.

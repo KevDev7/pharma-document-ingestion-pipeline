@@ -2,7 +2,7 @@
 
 Date: August 18, 2026
 
-These results verify the ingestion milestone and the first labeled retrieval comparison.
+This file records completed tests and measured results. It also states what each result does not prove.
 
 ## Automated Tests
 
@@ -38,7 +38,7 @@ The first manual run used two pharmaceutical blob PDFs from the completed extern
 | `pharma-blob-test.pdf` | 10 | 27 | 0 |
 | **Total** | **20** | **47** | **0** |
 
-The run finished successfully with no failed files. The stored duration was 0.0325 seconds on the local machine; this small digital-text sample is not large enough for a meaningful throughput claim.
+The run had no failures. Stored processing time was 0.0325 seconds on the local machine. Two small digital PDFs are not enough for a throughput claim.
 
 ## Duplicate Replay
 
@@ -64,7 +64,7 @@ The watcher detected the completed copy, processed one page into three chunks, r
 - Source bytes: 113,069
 - Recorded errors: 0
 
-These early counts intentionally remained modest. The core corpus below supplies reproducible ingestion scale; a labeled query set is still required before making retrieval-quality claims.
+These were early development counts. The frozen corpus below provides repeatable ingestion measurements. Retrieval claims use a separate labeled question set.
 
 ## FDA Core Corpus
 
@@ -80,7 +80,7 @@ The versioned manifest reconstructed 16 FDA-authored pharmaceutical quality PDFs
 | OCR-routed pages | 1 |
 | Failed files | 0 |
 
-The OCR-routed page had almost no embedded text. This confirms the routing path was used; it does not measure OCR transcription accuracy.
+The OCR-routed page had almost no embedded text. This confirms that OCR ran. It does not measure transcription accuracy.
 
 The immediate duplicate replay discovered the same 16 files, processed none, skipped all 16 by SHA-256, and completed in 0.0208 seconds.
 
@@ -97,7 +97,7 @@ Ten runs each used a fresh temporary SQLite database and produced identical file
 | Pages/second at p50 duration | 327.28 |
 | Pages/second at p95 duration | 315.67 |
 
-These local timings include transactional FTS5 updates, exclude download time, and reuse the same files, so operating-system caches may be warm. They are a reproducible development benchmark, not a production capacity claim. Raw run data and environment details are saved in [`docs/benchmarks/corpus-ingestion-2026-08-17.json`](benchmarks/corpus-ingestion-2026-08-17.json).
+These local timings include FTS5 index updates but exclude download time. Every run reuses the same files, so operating-system caches may be warm. The results are a repeatable development benchmark, not production capacity. Raw timings and environment details are in [`docs/benchmarks/corpus-ingestion-2026-08-17.json`](benchmarks/corpus-ingestion-2026-08-17.json).
 
 ## OCR Routing and Accuracy
 
@@ -108,20 +108,20 @@ Six frozen FDA pages were converted into 36 cases: digital controls, 200-DPI ima
 | Character count only | 100.00% | 38.71% | 55.81% |
 | Page-aware routing | 100.00% | 100.00% | 100.00% |
 
-The production extractor produced the expected outcome on all 38 scenarios and recovered the labeled phrase in all 24 scenarios expected to store OCR output. It preserved all six accurate hidden layers and rejected the matched-length lot-number/status conflict. A separate short-value regression test confirms that short valid OCR can replace longer fragmented garbage. The improved router added no OCR routes when separately audited across all 430 core-corpus pages; both methods routed the same one low-text page.
+The production extractor produced the expected outcome in all 38 cases. It recovered the labeled phrase in all 24 cases expected to store OCR text. It kept all six accurate hidden text layers and rejected the conflicting lot number and release status. A separate test confirms that short, valid OCR can replace longer broken text. During a 430-page corpus audit, the new router added no OCR work.
 
 | Tesseract configuration | Mean word error rate | Key-phrase accuracy | p50 seconds/page | p95 seconds/page |
 | --- | ---: | ---: | ---: | ---: |
 | `--psm 3` | 2.27% | 100.00% | 0.9696 | 1.3233 |
 | `--psm 6` | 2.10% | 100.00% | 0.9231 | 1.2730 |
 
-OCR quality uses 12 unique visible images rather than double-counting hidden-text variants that share the same raster. The digital source text is controlled ground truth, not an independent transcription. OCR latency excludes rasterization, uses one warm-up per configuration, and alternates execution order. The result supports the routing change and retaining `--psm 6`; it does not establish performance on handwriting or heavily damaged scans. Raw cases and measurements are saved in [`docs/benchmarks/ocr-routing-2026-08-17.json`](benchmarks/ocr-routing-2026-08-17.json).
+OCR quality uses 12 distinct visible images. Hidden-text variants that share an image are not counted twice. Digital source text serves as controlled ground truth, not an independent transcription. OCR timing excludes PDF rasterization. Each configuration received one warmup, and execution order alternated. The result supports `--psm 6` for this pipeline. It does not measure handwriting or heavily damaged scans. Raw results are in [`docs/benchmarks/ocr-routing-2026-08-17.json`](benchmarks/ocr-routing-2026-08-17.json).
 
 ## Operational Metrics Export
 
 The `export-metrics` command was run against the local development database after corpus, watcher, and manual verification runs. The snapshot reported 19 current documents, 451 current pages, 2,037 current searchable chunks, one OCR page, six completed runs, zero recorded failures, and a healthy FTS5 integrity check.
 
-This snapshot mixes controlled development activity and is not a corpus benchmark or production scale claim. It verifies that operational state can be exported without document text, filenames, hashes, source paths, or error messages. The versioned output is saved in [`docs/benchmarks/operational-metrics-2026-08-17.json`](benchmarks/operational-metrics-2026-08-17.json).
+This snapshot mixes several development runs. It is not a corpus benchmark or production scale result. It verifies that metrics can be exported without document text, filenames, hashes, source paths, or error messages. The output is in [`docs/benchmarks/operational-metrics-2026-08-17.json`](benchmarks/operational-metrics-2026-08-17.json).
 
 ## Live S3/SQS Integration
 
@@ -134,9 +134,9 @@ A private, versioned S3 bucket in `us-east-1` publishes `incoming/*.pdf` creatio
 | Changed certificate under the same key | Processed as a new version | 1 | 1 | Acknowledged |
 | Malformed `.pdf` | Quarantined with `FileDataError` | 0 | 0 | Acknowledged |
 
-The changed certificate points to the earlier document through `supersedes_document_id`; exactly one version remains current and only its chunk is active in FTS5. Every source record contains the S3 `versionId`. After verification, `incoming/` and the main queue contained no current work, `processed/` contained three hash-addressed objects, and `quarantine/` contained the malformed object. The final index integrity check remained healthy.
+The changed certificate points to the earlier document through `supersedes_document_id`. Only one version remains current, and only that version appears in FTS5 search. Every source record contains the S3 `versionId`. After the test, `incoming/` and the main queue were empty. `processed/` contained three hash-addressed objects, and `quarantine/` contained the malformed object. The index passed its integrity check.
 
-These are integration-path checks, not a throughput benchmark. The worker was invoked from the development machine rather than hosted continuously. Transient failure retries and non-acknowledgement are covered by automated tests; the live test did not intentionally revoke AWS permissions merely to force a message into the dead-letter queue. Raw evidence is saved in [`docs/benchmarks/aws-integration-2026-08-18.json`](benchmarks/aws-integration-2026-08-18.json).
+These tests verify the cloud event path, not throughput. The worker ran from the development machine and was not hosted continuously. Automated tests cover temporary failures and message retries. The live test did not break AWS permissions only to force a dead-letter message. Raw evidence is in [`docs/benchmarks/aws-integration-2026-08-18.json`](benchmarks/aws-integration-2026-08-18.json).
 
 ### Full Cloud Corpus Run
 
@@ -155,9 +155,9 @@ The complete frozen FDA corpus was then uploaded to `incoming/` and processed th
 | Main queue after processing | 0 visible, 0 in flight, 0 delayed |
 | Search index | Healthy, 1,987 current chunks |
 
-The isolated database exactly matched the frozen corpus totals: 6,159,783 source bytes, 430 pages, and 1,987 chunks. All 16 documents retained distinct S3 `versionId` values in source lineage. Stored pipeline-run duration was 0.0952 seconds at p50, 0.3427 seconds at p95, and 0.5254 seconds maximum. Those durations cover the local ingestion transaction after download; they exclude browser upload, SQS transit, and S3 download time and therefore are not end-to-end cloud latency.
+The isolated database matched the frozen corpus: 6,159,783 source bytes, 430 pages, and 1,987 chunks. All 16 documents kept distinct S3 `versionId` values. Stored processing time was 0.0952 seconds at p50, 0.3427 seconds at p95, and 0.5254 seconds maximum. These times cover local ingestion after download. They exclude browser upload, SQS transit, and S3 download, so they are not end-to-end cloud latency.
 
-The current bucket inventory contains 18 processed objects: the 16 FDA corpus objects and two earlier synthetic versioning checks. It also contains one intentionally malformed object in `quarantine/` and no current objects under `incoming/`. The dedicated worker remains unable to list the bucket because its role is intentionally limited to the object prefixes and queue actions needed for processing.
+The bucket contains 18 processed objects: 16 FDA files and two synthetic versioning checks. One malformed object remains in `quarantine/`, and `incoming/` is empty. The worker cannot list the whole bucket. Its permissions cover only the object paths and queue actions required for processing.
 
 ## Durable Search Index
 
@@ -172,7 +172,7 @@ Ten temporary-database runs compared a 77-chunk transaction from the median-size
 | Incremental chunk batch | 77 | 0.0124 seconds | 0.0127 seconds |
 | Full recovery rebuild | 2,037 | 0.0136 seconds | 0.0142 seconds |
 
-At this scale, transaction overhead dominates and the wall-clock difference is negligible. The result supports incremental work isolation and transactional correctness, not a speedup claim. Raw measurements are saved in [`docs/benchmarks/search-index-2026-08-17.json`](benchmarks/search-index-2026-08-17.json).
+At this size, database transaction overhead hides most timing differences. The result supports bounded incremental updates and database consistency, not a speedup claim. Raw measurements are in [`docs/benchmarks/search-index-2026-08-17.json`](benchmarks/search-index-2026-08-17.json).
 
 ## Labeled Retrieval Evaluation
 
@@ -180,7 +180,7 @@ The evaluation uses 80 questions across all 16 FDA documents: 32 development que
 
 Acceptance and test questions each target one relevant page. Multi-page cases appear only in development and audited validation, so the held-out result is limited to single-page retrieval.
 
-Development scoring compared 21 combinations of chunking strategy, embedding model, and retrieval method. It nominated full-page chunks with BGE-small hybrid retrieval, but the acceptance split selected boundary-aware BM25 before the final test was run.
+Development scoring compared 21 chunking, embedding, and retrieval combinations. It selected full-page BGE-small hybrid retrieval as the development candidate. Acceptance data selected boundary-aware BM25 before the final test.
 
 | Untouched test metric at K=5 | BM25 baseline | Hybrid candidate | Candidate difference |
 | --- | ---: | ---: | ---: |
@@ -189,4 +189,4 @@ Development scoring compared 21 combinations of chunking strategy, embedding mod
 | MRR | 96.88% | 73.96% | -22.92 points |
 | p95 retrieval latency | 1.17 ms | 11.74 ms | +10.57 ms |
 
-Input hashes, environment versions, raw rankings, and results at K=1/3/5/10 are saved in [`docs/benchmarks/retrieval-evaluation-2026-08-17.json`](benchmarks/retrieval-evaluation-2026-08-17.json). See [`docs/retrieval-evaluation.md`](retrieval-evaluation.md) for the method and limitations.
+Input hashes, package versions, rankings, and results at K=1/3/5/10 are in [`docs/benchmarks/retrieval-evaluation-2026-08-17.json`](benchmarks/retrieval-evaluation-2026-08-17.json). See [`docs/retrieval-evaluation.md`](retrieval-evaluation.md) for the method and limits.
