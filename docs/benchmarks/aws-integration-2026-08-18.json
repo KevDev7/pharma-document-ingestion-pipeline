@@ -88,9 +88,199 @@
     "current_chunks": 2038,
     "search_index_status": "healthy"
   },
+  "full_corpus_run": {
+    "captured_at": "2026-08-18T18:07:59.068225+00:00",
+    "state_root": "isolated fresh database",
+    "source": {
+      "pdf_files": 16,
+      "pages": 430,
+      "bytes": 6159783
+    },
+    "ingestion": {
+      "trigger_type": "s3_object_created",
+      "runs": 16,
+      "completed_files": 16,
+      "skipped_files": 0,
+      "failed_files": 0,
+      "chunks": 1987,
+      "digital_pages": 429,
+      "ocr_pages": 1,
+      "duration_seconds": {
+        "samples": 16,
+        "p50": 0.0952,
+        "p95": 0.3427,
+        "max": 0.5254,
+        "scope": "Local ingestion transaction after S3 download; excludes browser upload, SQS transit, and S3 download"
+      }
+    },
+    "lineage": {
+      "version_qualified_source_records": 16,
+      "distinct_source_uris": 16,
+      "distinct_s3_version_ids": 16
+    },
+    "documents": [
+      {
+        "filename": "fda-compliance-drug-manufacturing-inspections.pdf",
+        "run_id": "5932025c-5f0d-46b3-940c-983bcc273008",
+        "s3_version_id": "2VDXxDRqqpriDTAr7qdZrGxnTi8NAC8H",
+        "pages": 44,
+        "chunks": 188,
+        "ocr_pages": 0,
+        "duration_seconds": 0.1888
+      },
+      {
+        "filename": "fda-compliance-postapproval-inspections.pdf",
+        "run_id": "a30ed714-5e56-40c1-ab3c-6470904781c4",
+        "s3_version_id": "83Wgnr6NBRDnRkHdNKdv956BMTth6rl_",
+        "pages": 50,
+        "chunks": 229,
+        "ocr_pages": 0,
+        "duration_seconds": 0.2125
+      },
+      {
+        "filename": "fda-compliance-preapproval-inspections.pdf",
+        "run_id": "5da44310-0307-40c1-8c3f-f60e2a62d819",
+        "s3_version_id": "eeistY8qGOzWFeBdkyRYECvr4ONP_cFJ",
+        "pages": 58,
+        "chunks": 268,
+        "ocr_pages": 0,
+        "duration_seconds": 0.2461
+      },
+      {
+        "filename": "fda-compliance-sterile-drug-inspections.pdf",
+        "run_id": "e354cc80-b034-4c90-a604-a181f9dbc1ce",
+        "s3_version_id": "RlHA.22FleQDujpMtOITv_zi5FyF0eoB",
+        "pages": 54,
+        "chunks": 250,
+        "ocr_pages": 1,
+        "duration_seconds": 0.5254
+      },
+      {
+        "filename": "fda-guidance-aseptic-processing.pdf",
+        "run_id": "1cbc548e-e4ea-48b2-a6a5-9e62f32bd7ae",
+        "s3_version_id": "oAcWVnMeIZArWuF.J8pOwCvxHMv.kysq",
+        "pages": 63,
+        "chunks": 326,
+        "ocr_pages": 0,
+        "duration_seconds": 0.2818
+      },
+      {
+        "filename": "fda-guidance-data-integrity-cgmp.pdf",
+        "run_id": "dcc0f10f-3923-4f1a-9dcf-d62f31e5865a",
+        "s3_version_id": "4WOQVGYYST_VashNN.qXMCoXm2NoLRsn",
+        "pages": 17,
+        "chunks": 77,
+        "ocr_pages": 0,
+        "duration_seconds": 0.0998
+      },
+      {
+        "filename": "fda-guidance-high-risk-components.pdf",
+        "run_id": "31885f80-c1d2-44b0-9615-0692a12c5d90",
+        "s3_version_id": ".wxukSD13q6FoLzb_DQf_Cd9U9Dne33y",
+        "pages": 11,
+        "chunks": 53,
+        "ocr_pages": 0,
+        "duration_seconds": 0.0568
+      },
+      {
+        "filename": "fda-guidance-oos-test-results.pdf",
+        "run_id": "aa4e334d-7bb9-472f-8026-31ea6ac77e7b",
+        "s3_version_id": "STfCTNVYlNb.jhnL0HJh8bDrE89FABsM",
+        "pages": 17,
+        "chunks": 85,
+        "ocr_pages": 0,
+        "duration_seconds": 0.0757
+      },
+      {
+        "filename": "fda-guidance-orally-disintegrating-tablets.pdf",
+        "run_id": "38ce6a4c-b2ae-43eb-b5c2-def21f88dae5",
+        "s3_version_id": "of7n5L3d2PutlFQv8Srui980ajwmgSay",
+        "pages": 6,
+        "chunks": 16,
+        "ocr_pages": 0,
+        "duration_seconds": 0.0228
+      },
+      {
+        "filename": "fda-guidance-pat-framework.pdf",
+        "run_id": "8f6c9392-73d9-44fd-99b5-3167fecf1865",
+        "s3_version_id": "_Dm.zp2hPXYJHx1FT3RgHKJ92dousuAb",
+        "pages": 19,
+        "chunks": 88,
+        "ocr_pages": 0,
+        "duration_seconds": 0.0906
+      },
+      {
+        "filename": "fda-guidance-process-validation.pdf",
+        "run_id": "1a5e5dcd-77dc-4f19-b696-a6ec6d8bb5de",
+        "s3_version_id": "1ddvGqWzk4_AGb8ISIRc1XM2PIn4gTE.",
+        "pages": 22,
+        "chunks": 113,
+        "ocr_pages": 0,
+        "duration_seconds": 0.1077
+      },
+      {
+        "filename": "fda-guidance-pyrogen-endotoxins.pdf",
+        "run_id": "98078eec-e09a-4d8e-b526-f130842df482",
+        "s3_version_id": "d3AmBICjJEyl7dAYYD3HlZOySi21d3LW",
+        "pages": 12,
+        "chunks": 57,
+        "ocr_pages": 0,
+        "duration_seconds": 0.0786
+      },
+      {
+        "filename": "fda-guidance-quality-systems-cgmp.pdf",
+        "run_id": "2aee7433-6868-4c70-ae80-860ea57ca3c9",
+        "s3_version_id": "L6O4YMYCos98Elc9_npSt6uB272IXNev",
+        "pages": 32,
+        "chunks": 147,
+        "ocr_pages": 0,
+        "duration_seconds": 0.1369
+      },
+      {
+        "filename": "fda-guidance-sprinkle-bead-size.pdf",
+        "run_id": "b9d796e8-24d3-4488-b8a5-68888051fa6f",
+        "s3_version_id": "._J.6UvIYaLvK8lYW5U3AEXdLO.aE7O4",
+        "pages": 7,
+        "chunks": 24,
+        "ocr_pages": 0,
+        "duration_seconds": 0.0513
+      },
+      {
+        "filename": "fda-guidance-tablet-scoring.pdf",
+        "run_id": "b9fbd90b-0b5e-4b5d-b1ff-d295e6f005ba",
+        "s3_version_id": "zpYynPp_TOBQa0jj3pSZL9asefr0_7Ky",
+        "pages": 8,
+        "chunks": 25,
+        "ocr_pages": 0,
+        "duration_seconds": 0.0516
+      },
+      {
+        "filename": "fda-guidance-tablet-size-shape.pdf",
+        "run_id": "a03bb655-a43c-4b78-8b66-68688d59c8fc",
+        "s3_version_id": "rMFwD8X.EOAhhED6Q7F9VG5wCpj50YuW",
+        "pages": 10,
+        "chunks": 41,
+        "ocr_pages": 0,
+        "duration_seconds": 0.0681
+      }
+    ],
+    "post_run_state": {
+      "main_queue_visible_messages": 0,
+      "main_queue_in_flight_messages": 0,
+      "main_queue_delayed_messages": 0,
+      "incoming_current_objects": 0,
+      "processed_current_objects": 18,
+      "quarantine_current_objects": 1,
+      "current_documents_in_isolated_database": 16,
+      "current_pages_in_isolated_database": 430,
+      "current_chunks_in_isolated_database": 1987,
+      "search_index_status": "healthy"
+    }
+  },
   "limitations": [
     "The worker was invoked from the development machine; it is not a continuously hosted service.",
     "The live test covers duplicate, success, replacement, and deterministic quarantine outcomes.",
+    "The full-corpus processing durations exclude browser upload, SQS transit, and S3 download and are not end-to-end cloud latency.",
     "Transient retry and dead-letter behavior is covered by automated worker tests rather than a deliberately broken live AWS permission."
   ]
 }

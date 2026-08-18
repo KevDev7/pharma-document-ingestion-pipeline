@@ -138,6 +138,27 @@ The changed certificate points to the earlier document through `supersedes_docum
 
 These are integration-path checks, not a throughput benchmark. The worker was invoked from the development machine rather than hosted continuously. Transient failure retries and non-acknowledgement are covered by automated tests; the live test did not intentionally revoke AWS permissions merely to force a message into the dead-letter queue. Raw evidence is saved in [`docs/benchmarks/aws-integration-2026-08-18.json`](benchmarks/aws-integration-2026-08-18.json).
 
+### Full Cloud Corpus Run
+
+The complete frozen FDA corpus was then uploaded to `incoming/` and processed through live S3 object-created events and SQS using a fresh, isolated SQLite database.
+
+| Measure | Result |
+| --- | ---: |
+| S3-triggered runs | 16 |
+| Completed files | 16 |
+| Failed or skipped files | 0 |
+| Source pages | 430 |
+| Stored chunks | 1,987 |
+| Digital extraction pages | 429 |
+| OCR fallback pages | 1 |
+| Version-qualified S3 source records | 16 of 16 |
+| Main queue after processing | 0 visible, 0 in flight, 0 delayed |
+| Search index | Healthy, 1,987 current chunks |
+
+The isolated database exactly matched the frozen corpus totals: 6,159,783 source bytes, 430 pages, and 1,987 chunks. All 16 documents retained distinct S3 `versionId` values in source lineage. Stored pipeline-run duration was 0.0952 seconds at p50, 0.3427 seconds at p95, and 0.5254 seconds maximum. Those durations cover the local ingestion transaction after download; they exclude browser upload, SQS transit, and S3 download time and therefore are not end-to-end cloud latency.
+
+The current bucket inventory contains 18 processed objects: the 16 FDA corpus objects and two earlier synthetic versioning checks. It also contains one intentionally malformed object in `quarantine/` and no current objects under `incoming/`. The dedicated worker remains unable to list the bucket because its role is intentionally limited to the object prefixes and queue actions needed for processing.
+
 ## Durable Search Index
 
 The existing local database was migrated once, backfilling 2,037 current chunks in 0.0290 seconds. A second process reported the same initialization timestamp, confirming that normal startup did not rebuild the index. SQLite's FTS integrity check passed.

@@ -58,7 +58,7 @@ pharma-pipeline watch-s3 \
   --profile YOUR_WORKER_PROFILE
 ```
 
-The verified deployment uses a private, versioned, SSE-S3 bucket; an encrypted standard SQS queue; a dead-letter queue after three failed receives; and a least-privilege worker identity. See [the S3 integration evidence](docs/benchmarks/aws-integration-2026-08-18.json) for the live scenarios and limitations.
+The verified deployment uses a private, versioned, SSE-S3 bucket; an encrypted standard SQS queue; a dead-letter queue after three failed receives; and a least-privilege worker identity. A fresh cloud-triggered run processed the complete 16-PDF FDA corpus into 430 pages and 1,987 chunks with one OCR fallback page, zero failures, version-qualified S3 lineage for every document, and an empty queue afterward. See [the S3 integration evidence](docs/benchmarks/aws-integration-2026-08-18.json) for the live scenarios and limitations.
 
 ## Reproducible Corpus
 

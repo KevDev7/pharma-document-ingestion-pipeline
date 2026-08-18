@@ -15,7 +15,7 @@ This file prevents unsupported resume claims. A claim moves to **verified** only
 | Measured p95 retrieval latency across repeated interleaved trials | 80 raw timing samples per retriever | Verified locally: BM25 1.17 ms; hybrid candidate 11.74 ms |
 | Incrementally maintained a durable BM25 index | Trigger lifecycle tests, restart test, integrity check, and saved index benchmark | Verified locally: 77-chunk update transaction; duplicate replay added zero chunks |
 | Exported operational ingestion and index metrics | Versioned JSON schema plus CLI and tests covering versions, duplicates, latency, OCR, errors, and index health | Implemented and tested; development snapshot is not a scale benchmark |
-| Ran on S3/SQS | Deployed infrastructure and captured run evidence | Verified: four live events covered duplicate, new, replacement, and quarantine outcomes; worker was locally invoked, not continuously hosted |
+| Ran on S3/SQS | Deployed infrastructure and captured run evidence | Verified: four outcome-path events plus a fresh 16-PDF / 430-page / 1,987-chunk corpus run; worker was locally invoked, not continuously hosted |
 
 ## Intended Interview Stories
 
@@ -49,10 +49,10 @@ The worker writes each run and file failure to SQLite, and the export command pr
 
 ### S3/SQS event ingestion
 
-A private, versioned S3 bucket publishes only `incoming/*.pdf` object-created events to an encrypted standard SQS queue. A least-privilege worker downloads the exact object version, reuses the ingestion transaction, and acknowledges only handled outcomes. Four live events verified a duplicate skip, new document, changed version, and deterministic quarantine; the main queue returned to zero messages after every handled event. The worker ran from the development machine, so the defensible claim is deployed cloud ingress and queue semantics, not an always-on hosted service.
+A private, versioned S3 bucket publishes only `incoming/*.pdf` object-created events to an encrypted standard SQS queue. A least-privilege worker downloads the exact object version, reuses the ingestion transaction, and acknowledges only handled outcomes. Four live events verified a duplicate skip, new document, changed version, and deterministic quarantine. A separate fresh-state run then processed all 16 FDA PDFs into 430 pages and 1,987 chunks with zero failures, one OCR fallback page, unique version-qualified lineage for every document, and an empty queue afterward. The worker ran from the development machine, so the defensible claim is deployed cloud ingress and queue semantics, not an always-on hosted service or end-to-end cloud latency benchmark.
 
 ## Draft Resume Shape
 
-1. Built an event-driven pipeline that processed **16 FDA PDFs / 430 pages** into **1,987 page-linked chunks**, using content hashes to skip duplicate files.
-2. Added OCR fallback, document versioning, failure quarantine, page-level lineage, and transactional BM25 index updates.
+1. Built an S3/SQS event-driven pipeline that processed **16 FDA PDFs / 430 pages** into **1,987 page-linked chunks**, with content-hash idempotency and zero failures in the fresh cloud run.
+2. Added OCR fallback, S3 version lineage, immutable document replacement, failure quarantine, and transactional BM25 index updates.
 3. Evaluated **21 retrieval configurations on 80 labeled questions** and retained BM25 after acceptance testing; it later beat the hybrid candidate by **12.5 Recall@5 points** on untouched test data.

@@ -55,6 +55,8 @@ Four live events were run on August 18, 2026:
 
 After the runs, `incoming/` and the main queue were empty, `processed/` contained three hash-addressed objects, `quarantine/` contained one object, and the search-index integrity check remained healthy. Transient retry behavior is covered by the worker test suite rather than a deliberately broken live permission. Exact run IDs, hashes, destinations, counts, and limitations are saved in [`benchmarks/aws-integration-2026-08-18.json`](benchmarks/aws-integration-2026-08-18.json).
 
+The full frozen FDA corpus was also uploaded through the same `incoming/` event path and consumed into a fresh isolated database. Sixteen S3 events completed successfully and produced 430 pages, 1,987 chunks, and one OCR fallback page with no failed or skipped files. Every document stored a distinct version-qualified S3 source URI, the FTS5 index contained all 1,987 current chunks, and the main queue returned to zero visible, in-flight, and delayed messages. Stored processing durations exclude upload, queue transit, and object download, so they are not presented as end-to-end cloud latency.
+
 ## AWS References
 
 - [S3 event notification delivery, ordering, and duplicates](https://docs.aws.amazon.com/AmazonS3/latest/userguide/notification-how-to-event-types-and-destinations.html)
