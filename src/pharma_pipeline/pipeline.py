@@ -2,6 +2,7 @@ import hashlib
 import shutil
 import time
 import uuid
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
 
@@ -9,6 +10,13 @@ from .config import Settings
 from .database import PipelineDatabase
 from .extractor import PdfExtractor
 from .text import split_text
+
+
+@dataclass(frozen=True)
+class IngestionSource:
+    local_path: Path
+    source_uri: Optional[str] = None
+    logical_name: Optional[str] = None
 
 
 def sha256_file(path: Path, block_size: int = 1024 * 1024) -> str:
@@ -36,16 +44,36 @@ class IngestionPipeline:
         trigger_type: str = "manual",
         move_after_processing: bool = False,
     ) -> Dict[str, object]:
-        input_paths = [Path(path).expanduser().resolve() for path in paths]
+        sources = [IngestionSource(local_path=Path(path)) for path in paths]
+        return self.ingest_sources(
+            sources,
+            trigger_type=trigger_type,
+            move_after_processing=move_after_processing,
+        )
+
+    def ingest_sources(
+        self,
+        sources: Iterable[IngestionSource],
+        trigger_type: str = "manual",
+        move_after_processing: bool = False,
+    ) -> Dict[str, object]:
+        input_sources = [
+            IngestionSource(
+                local_path=source.local_path.expanduser().resolve(),
+                source_uri=source.source_uri,
+                logical_name=source.logical_name,
+            )
+            for source in sources
+        ]
         run_id = str(uuid.uuid4())
         started = time.perf_counter()
-        self.database.start_run(run_id, trigger_type, len(input_paths))
+        self.database.start_run(run_id, trigger_type, len(input_sources))
 
         metrics: Dict[str, object] = {
             "run_id": run_id,
             "trigger_type": trigger_type,
             "status": "completed",
-            "discovered_files": len(input_paths),
+            "discovered_files": len(input_sources),
             "processed_files": 0,
             "skipped_files": 0,
             "failed_files": 0,
@@ -54,8 +82,8 @@ class IngestionPipeline:
             "results": [],
         }
 
-        for path in input_paths:
-            result = self._ingest_one(path, run_id, move_after_processing)
+        for source in input_sources:
+            result = self._ingest_one(source, run_id, move_after_processing)
             metrics["results"].append(result)
             outcome = result["outcome"]
             if outcome == "processed":
@@ -79,10 +107,13 @@ class IngestionPipeline:
 
     def _ingest_one(
         self,
-        path: Path,
+        source: IngestionSource,
         run_id: str,
         move_after_processing: bool,
     ) -> Dict[str, object]:
+        path = source.local_path
+        source_path = source.source_uri or str(path)
+        logical_name = source.logical_name or path.name
         content_hash: Optional[str] = None
         try:
             if not path.exists() or not path.is_file():
@@ -97,14 +128,14 @@ class IngestionPipeline:
                 if move_after_processing:
                     archived_path = self._move_file(path, self.settings.archive_dir, content_hash)
                 return {
-                    "source_path": str(path),
+                    "source_path": source_path,
                     "outcome": "skipped",
                     "reason": "duplicate_content_hash",
                     "existing_document_id": existing["document_id"],
                     "archived_path": str(archived_path) if archived_path else None,
                 }
 
-            current = self.database.get_current_document(path.name)
+            current = self.database.get_current_document(logical_name)
             document_id = str(uuid.uuid4())
             pages = self.extractor.extract(path)
             page_rows: List[Dict[str, object]] = []
@@ -144,8 +175,8 @@ class IngestionPipeline:
             document = {
                 "document_id": document_id,
                 "sha256": content_hash,
-                "logical_name": path.name,
-                "source_path": str(path),
+                "logical_name": logical_name,
+                "source_path": source_path,
                 "size_bytes": path.stat().st_size,
                 "page_count": len(page_rows),
                 "chunk_count": len(chunk_rows),
@@ -165,7 +196,7 @@ class IngestionPipeline:
                 self.database.update_source_path(document_id, str(archived_path))
 
             return {
-                "source_path": str(path),
+                "source_path": source_path,
                 "outcome": "processed",
                 "document_id": document_id,
                 "sha256": content_hash,
@@ -176,12 +207,12 @@ class IngestionPipeline:
                 "archived_path": str(archived_path) if archived_path else None,
             }
         except Exception as error:
-            self.database.record_error(run_id, str(path), content_hash, error)
+            self.database.record_error(run_id, source_path, content_hash, error)
             quarantined_path = None
             if move_after_processing and path.exists():
                 quarantined_path = self._move_file(path, self.settings.quarantine_dir, content_hash)
             return {
-                "source_path": str(path),
+                "source_path": source_path,
                 "outcome": "failed",
                 "error_type": type(error).__name__,
                 "error_message": str(error),

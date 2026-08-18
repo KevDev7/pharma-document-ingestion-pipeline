@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw
 
 from pharma_pipeline.config import Settings
 from pharma_pipeline.extractor import extract_critical_fields
-from pharma_pipeline.pipeline import IngestionPipeline
+from pharma_pipeline.pipeline import IngestionPipeline, IngestionSource
 
 
 def make_digital_pdf(path: Path, page_texts) -> None:  # type: ignore[no-untyped-def]
@@ -111,6 +111,44 @@ def test_ingestion_persists_lineage_and_skips_duplicate(
         "Certificate of Quality",
         "Packaging Specification",
     ]
+
+
+def test_cloud_source_preserves_uri_and_logical_name(
+    pipeline: IngestionPipeline, tmp_path: Path
+) -> None:
+    staged_path = tmp_path / "temporary-download.pdf"
+    make_digital_pdf(staged_path, ["Certificate of Quality\nLot Number: 12345678\n" * 8])
+    source_uri = "s3://example-bucket/incoming/vendor/quality.pdf?versionId=abc123"
+
+    result = pipeline.ingest_sources(
+        [
+            IngestionSource(
+                local_path=staged_path,
+                source_uri=source_uri,
+                logical_name="vendor/quality.pdf",
+            )
+        ],
+        trigger_type="s3_object_created",
+    )
+
+    assert result["processed_files"] == 1
+    document = pipeline.database.fetch_all(
+        "SELECT logical_name, source_path FROM documents"
+    )[0]
+    assert document["logical_name"] == "vendor/quality.pdf"
+    assert document["source_path"] == source_uri
+
+    duplicate = pipeline.ingest_sources(
+        [
+            IngestionSource(
+                local_path=staged_path,
+                source_uri=source_uri,
+                logical_name="vendor/quality.pdf",
+            )
+        ],
+        trigger_type="s3_object_created",
+    )
+    assert duplicate["results"][0]["source_path"] == source_uri
 
 
 def test_critical_fields_preserve_spaced_identifiers() -> None:
